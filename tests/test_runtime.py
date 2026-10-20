@@ -42,6 +42,32 @@ def test_text_first_retrieval_does_not_require_visual_embeddings(tmp_path, monke
     assert warnings == []
 
 
+def test_research_question_expands_metric_vocabulary_and_keeps_multiple_pages(tmp_path, monkeypatch):
+    source = {
+        'docId': 'a' * 64,
+        'filename': 'paper.pdf',
+        'totalPages': 3,
+        'pageText': {
+            '1': 'We evaluate the method in simulation under observation shifts.',
+            '2': 'We choose Success Rate (SR) as metric and test 20 episodes per task.',
+            '3': 'The ablation reports success rate, episode length, and inference time.',
+        },
+    }
+    runtime = Runtime(tmp_path, lambda: [source])
+    monkeypatch.setattr(runtime, 'semantic', lambda *_: pytest.fail('visual retrieval must stay deferred'))
+
+    strategy = runtime.question_strategy('Can you explain the evaluation metrics they used?')
+    candidates, warnings = runtime.retrieve(
+        runtime.sources(['a' * 64]), strategy['retrieval_query'], include_semantic=False,
+        per_source_limit=3, max_candidates=3,
+    )
+
+    assert strategy['mode'] == 'research'
+    assert 'success rate' in strategy['retrieval_query']
+    assert {candidate[2] for candidate in candidates} == {1, 2, 3}
+    assert warnings == []
+
+
 def test_missing_model_key_and_empty_input_have_no_sample_fallback(tmp_path,monkeypatch):
     monkeypatch.delenv('VLM_API_KEY',raising=False)
     runtime=Runtime(tmp_path,lambda:[record('a','text')])

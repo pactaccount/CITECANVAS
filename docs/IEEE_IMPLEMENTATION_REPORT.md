@@ -121,10 +121,15 @@ creates and caches a lossless 300-DPI evidence render from the original PDF.
 Thus, upload latency is reduced without replacing the underlying source or
 reducing visual-verification resolution.
 
-Answering uses a cascade. Native text and BM25 select one economical first
-candidate; it is still checked by the vision model against a 300-DPI evidence
-page. If verification is inconclusive, CiteCanvas falls through to the existing
-visual semantic retrieval and evaluates the remaining candidates. Qdrant is
+Answering uses a cascade. Specific factual questions use native text and BM25
+to select one economical first candidate, which is still checked by the vision
+model against a 300-DPI evidence page. Broad research questions, including
+evaluation and comparison requests, expand related result vocabulary (for
+example, *metrics* to *success rate* and *inference time*), inspect a bounded
+set of relevant pages, and return individually source-linked findings. This
+prevents an experimental setting or a baseline from being presented as an
+evaluation metric. If verification is inconclusive, CiteCanvas falls through to
+the existing visual semantic retrieval and evaluates the remaining candidates. Qdrant is
 queried before a document's page vectors are regenerated or uploaded, preventing
 the former repeated upsert on later questions. This preserves visual retrieval
 for scans, tables, charts, and diagrams while avoiding it when a direct

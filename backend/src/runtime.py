@@ -104,6 +104,40 @@ class Runtime:
         with self.native_lock:
             return DocumentIngestionService.render_evidence_page(source_pdf, page, target)
 
+    @staticmethod
+    def question_strategy(query):
+        """Choose a bounded multi-page route only for research-style questions.
+
+        A keyword match is enough for a simple lookup such as a serial number,
+        but it is not enough for questions about an experiment or comparison.
+        Those questions often use different vocabulary from the paper's result
+        sections (for example, ``metrics`` versus ``success rate``).  The
+        expanded terms improve candidate recall; they are not facts used in an
+        answer, which remains visually verified on the original page.
+        """
+        normalized = re.sub(r"\s+", " ", query.lower()).strip()
+        evaluation = bool(re.search(r"\b(evaluat\w*|metric\w*|benchmark\w*|experiment\w*|test(?:ed|ing)?|performance)\b", normalized))
+        comparison = bool(re.search(r"\b(compare\w*|comparison|versus|vs\.?|baseline\w*)\b", normalized))
+        explanatory = bool(re.search(r"\b(explain|summari[sz]e|how did|what methods?|what approach)\b", normalized))
+
+        if evaluation:
+            return {
+                "mode": "research",
+                "retrieval_query": query + " metric metrics measurement success rate accuracy precision recall f1 latency runtime inference time episode length results experiment baseline comparison",
+                "evidence_question": (
+                    "Identify only the evaluation metrics, measurement definitions, sample sizes, or reported metric values that answer this question: "
+                    + query
+                    + " Do not present datasets, perturbation settings, or baseline names as metrics."
+                ),
+            }
+        if comparison or explanatory:
+            return {
+                "mode": "research",
+                "retrieval_query": query + " results methods baseline comparison experiment",
+                "evidence_question": query,
+            }
+        return {"mode": "direct", "retrieval_query": query, "evidence_question": query}
+
     def embeddings(self, inputs, kind='passage', modality='image'):
         if not os.getenv('VLM_API_KEY'):
             raise RuntimeError('The server needs VLM_API_KEY to use NVIDIA analysis.')
@@ -225,14 +259,14 @@ class Runtime:
         scores = [float(np.dot(q,v)/(max(np.linalg.norm(q)*np.linalg.norm(v),1e-10))) for v in vectors]
         return sorted(range(1,len(vectors)+1), key=lambda p:scores[p-1], reverse=True)[:4]
 
-    def retrieve(self, sources, query, *, include_semantic=True):
+    def retrieve(self, sources, query, *, include_semantic=True, per_source_limit=2, max_candidates=4):
         candidates = []; warnings = []
         for source in sources:
             texts = {int(k): v for k,v in source.get('pageText', {}).items() if v.strip()}
             protected = re.findall(r'\b(?:lot|batch|part)\s*(?:number\s*)?[:#]?\s*([A-Za-z0-9-]*\d[A-Za-z0-9-]*)', query, re.I)
             if texts and protected and any(re.sub(r'\W','',p).lower() not in re.sub(r'\W','', ' '.join(texts.values())).lower() for p in protected):
                 continue
-            lexical = BM25Retriever(texts).retrieve(query, top_k=4) if texts else []
+            lexical = BM25Retriever(texts).retrieve(query, top_k=max(4, per_source_limit * 2)) if texts else []
             ranks = {}
             for item in lexical:ranks[item['page_number']] = 2/(60+item['rank'])
             if include_semantic:
@@ -242,26 +276,32 @@ class Runtime:
                     warnings.append(str(error) if isinstance(error, RuntimeError) else 'Semantic retrieval unavailable; keyword retrieval used.')
             if not ranks and include_semantic:
                 ranks = {p:0 for p in range(1,min(source['totalPages'],2)+1)}
-            for page,score in sorted(ranks.items(), key=lambda x:x[1], reverse=True)[:2]:
+            for page,score in sorted(ranks.items(), key=lambda x:x[1], reverse=True)[:per_source_limit]:
                 candidates.append((score, source, page))
-        return sorted(candidates,key=lambda x:x[0],reverse=True)[:4], list(dict.fromkeys(warnings))
+        return sorted(candidates,key=lambda x:x[0],reverse=True)[:max_candidates], list(dict.fromkeys(warnings))
 
     def ask(self, ids, query):
         if not isinstance(query,str) or not 1 <= len(query.strip()) <= 2000:
             raise ValueError('Enter a question of up to 2,000 characters.')
         sources = self.sources(ids)
         if not os.getenv('VLM_API_KEY'):raise RuntimeError('NVIDIA analysis is not configured on this server.')
+        strategy = self.question_strategy(query)
+        research_mode = strategy['mode'] == 'research'
         started = time.perf_counter()
         # A text-backed page is cheap to locate and still receives the same
         # high-resolution visual verification. Only if that direct route
         # cannot establish an answer do we invoke visual semantic retrieval.
-        candidates, warnings = self.retrieve(sources, query, include_semantic=False)
+        candidates, warnings = self.retrieve(
+            sources, strategy['retrieval_query'], include_semantic=False,
+            per_source_limit=3 if research_mode else 2,
+            max_candidates=3 if research_mode else 4,
+        )
         fast_retrieval_ms = round((time.perf_counter() - started) * 1000)
         checked = []; answers = []
         client = VLMClient(grounding_engine=GroundingEngine(self.storage.parent/'crops'), timeout_seconds=45)
         verification_ms = 0
 
-        def inspect(candidates):
+        def inspect(candidates, *, stop_at_first):
             nonlocal verification_ms
             for _,source,page in candidates:
                 if (source['docId'], page) in {(item['fileId'], item['page']) for item in checked}:
@@ -270,7 +310,7 @@ class Runtime:
                 pdf = self.storage/source['docId']/'source.pdf'
                 page_started = time.perf_counter()
                 with self.model_lock:
-                    answer = client.answer_page_query(query, visual_page, source['docId'], page)
+                    answer = client.answer_page_query(strategy['evidence_question'], visual_page, source['docId'], page)
                 verification_ms += round((time.perf_counter() - page_started) * 1000)
                 if answer.status.value == 'direct' and answer.citation is None and pdf.exists():
                     with self.native_lock:
@@ -288,24 +328,32 @@ class Runtime:
                     answers.append({'answer':answer.answer, 'displayAnswer':answer.display_answer or answer.answer,
                         'fileId':source['docId'],'filename':source['filename'], 'page':page,
                         'box':answer.citation.box_2d.model_dump(), 'status':'model_grounded'})
-                    return True
-            return False
+                    if stop_at_first:
+                        return True
+            return bool(answers)
 
         # One lexical candidate is enough for a fast direct path. A negative
         # verification deliberately falls through to the full visual method.
-        found = inspect(candidates[:1])
+        found = inspect(candidates if research_mode else candidates[:1], stop_at_first=not research_mode)
         semantic_retrieval_ms = 0
         if not found:
             semantic_started = time.perf_counter()
-            semantic_candidates, semantic_warnings = self.retrieve(sources, query, include_semantic=True)
+            semantic_candidates, semantic_warnings = self.retrieve(
+                sources, strategy['retrieval_query'], include_semantic=True,
+                per_source_limit=3 if research_mode else 2,
+                max_candidates=4 if research_mode else 4,
+            )
             semantic_retrieval_ms = round((time.perf_counter() - semantic_started) * 1000)
             warnings.extend(semantic_warnings)
-            inspect(semantic_candidates)
+            inspect(semantic_candidates, stop_at_first=not research_mode)
         timings = {'fastRetrievalMs': fast_retrieval_ms, 'semanticRetrievalMs': semantic_retrieval_ms, 'verificationMs': verification_ms,
                    'totalMs': round((time.perf_counter() - started) * 1000)}
-        print(json.dumps({'event': 'citecanvas.ask', 'sourceCount': len(sources), 'checkedPages': len(checked), 'timingsMs': timings}), flush=True)
+        print(json.dumps({'event': 'citecanvas.ask', 'mode': strategy['mode'], 'sourceCount': len(sources), 'checkedPages': len(checked), 'timingsMs': timings}), flush=True)
+        message = ('Verified findings from multiple relevant pages — open each source to check it.' if research_mode and answers
+                   else 'Model answer — open the source to check it.' if answers
+                   else 'I could not establish an answer from the retrieved pages. Try a more specific question or another source.')
         return {'answers':answers,'checkedPages':checked,'warnings':list(dict.fromkeys(warnings)),
-                'message': 'Model answer — open the source to check it.' if answers else 'I could not establish an answer from the retrieved pages. Try a more specific question or another source.',
+                'message': message,
                 'model':client.model_name, 'timings': timings}
 
     def extract(self, ids, fields):
