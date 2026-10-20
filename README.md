@@ -56,6 +56,5 @@ workspace. It does not call NVIDIA or Qdrant.
 The repository contains a pinned-dependency Dockerfile, Render Blueprint, and
 versioned database migrations. Add real values only in Render, never in GitHub.
 
-- [Render deployment guide](docs/RENDER_DEPLOYMENT.md)
 - [IEEE-style implementation report](docs/IEEE_IMPLEMENTATION_REPORT.md)
 - [OpenTelemetry setup](docs/OPEN_TELEMETRY_SETUP.md)

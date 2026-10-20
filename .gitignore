@@ -1,6 +1,7 @@
 # Secrets and developer-specific configuration
 .env
 .env.*
+CiteCanvas.env
 !.env.production.example
 
 # Anonymous workspace cache and generated local data
