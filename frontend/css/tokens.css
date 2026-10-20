@@ -1,0 +1,128 @@
+/* ==========================================================================
+   EVID DESIGN SYSTEM TOKENS
+   Restrained, enterprise-grade, accessible visual tokens
+   ========================================================================== */
+
+:root {
+  /* Core Color Palette - Restrained Enterprise Neutral & Blue */
+  --color-bg-app: #F7F7F4;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-surface-alt: #F1F4F8;
+  --color-bg-surface-hover: #F8F9FA;
+  --color-bg-sidebar: #17202C;
+  --color-bg-sidebar-alt: #1E293B;
+  --color-bg-sidebar-hover: #263344;
+  --color-bg-sidebar-active: #345DAD;
+
+  /* Borders & Dividers */
+  --color-border-subtle: #DEE3E8;
+  --color-border-medium: #DEE3E8;
+  --color-border-strong: #BDC6D1;
+  --color-border-focus: #345DAD;
+
+  /* Typography Colors */
+  --color-text-primary: #17202C;
+  --color-text-secondary: #526071;
+  --color-text-muted: #6B7C93;
+  --color-text-inverse: #FFFFFF;
+  --color-text-inverse-muted: #9BA8BA;
+  --color-text-link: #345DAD;
+
+  /* Primary Brand Action */
+  --color-primary: #345DAD;
+  --color-primary-hover: #294C91;
+  --color-primary-light: #EAF0FA;
+  --color-primary-border: #BCD0EE;
+
+  /* Semantic Status Colors */
+  --color-success: #15803D;
+  --color-success-bg: #F0FDF4;
+  --color-success-border: #BBF7D0;
+  --color-success-text: #166534;
+
+  --color-warning: #B45309;
+  --color-warning-bg: #FFFBEB;
+  --color-warning-border: #FDE68A;
+  --color-warning-text: #92400E;
+
+  --color-error: #B91C1C;
+  --color-error-bg: #FEF2F2;
+  --color-error-border: #FECACA;
+  --color-error-text: #991B1B;
+
+  --color-info: #0369A1;
+  --color-info-bg: #F0F9FF;
+  --color-info-border: #BAE6FD;
+  --color-info-text: #075985;
+
+  /* Evidence Bounding Box Highlight */
+  --color-evidence-box: #345DAD;
+  --color-evidence-box-bg: rgba(52, 93, 173, 0.18);
+  --color-evidence-box-glow: rgba(52, 93, 173, 0.35);
+
+  /* Typography Scale */
+  --font-family-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 24px;
+
+  --line-height-title: 32px;
+  --line-height-heading: 24px;
+  --line-height-body: 22px;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+  --line-height-metadata: 18px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing Scale (4, 8, 12, 16, 24, 32px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Corners */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-control: 8px;
+  --radius-lg: 8px;
+  --radius-surface: 12px;
+  --radius-xl: 12px;
+  --radius-pill: 9999px;
+
+  /* Control Heights */
+  --control-height-sm: 32px;
+  --control-height-md: 40px;
+  --control-height-lg: 48px;
+
+  /* Shadows (Subtle, professional) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 3px 6px -1px rgba(0, 0, 0, 0.06), 0 1px 3px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 8px 16px -2px rgba(0, 0, 0, 0.06), 0 3px 6px -2px rgba(0, 0, 0, 0.03);
+  --shadow-modal: 0 16px 28px -4px rgba(0, 0, 0, 0.1), 0 6px 12px -3px rgba(0, 0, 0, 0.04);
+
+  /* Layout Dimensions */
+  --topbar-height: 64px;
+  --sidebar-width: 232px;
+  --sidebar-collapsed-width: 64px;
+  --content-padding: 24px;
+  --content-padding-mobile: 16px;
+
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-normal: 180ms ease;
+  --transition-slow: 240ms ease;
+}

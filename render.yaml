@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: evid
+    runtime: docker
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: EVID_STORAGE_BACKEND
+        value: r2_neon
+      - key: EVID_WORKSPACE_TTL_HOURS
+        value: "24"
+      - key: EVID_COOKIE_SECURE
+        value: "true"
+      - key: OTEL_SERVICE_NAME
+        value: evid
+      - key: EVID_ENVIRONMENT
+        value: production
+      - key: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: http/protobuf
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        sync: false
+      - key: OTEL_EXPORTER_OTLP_HEADERS
+        sync: false
+      - key: OTEL_EXPORTER_OTLP_TIMEOUT
+        value: "1000"
+      - key: DATABASE_URL
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: VLM_API_KEY
+        sync: false
+      - key: VLM_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: VLM_MODEL_NAME
+        value: meta/llama-3.2-11b-vision-instruct

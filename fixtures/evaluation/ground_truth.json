@@ -1,0 +1,196 @@
+[
+  {
+    "id": "PHARMA-001",
+    "domain": "regulatory_storage",
+    "query": "What is the recommended storage temperature for standard AKTA ready flow kits?",
+    "expected_status": "direct",
+    "expected_page": 1,
+    "expected_value": 5.0,
+    "expected_unit": "°C",
+    "expected_text_snippet": "> +5°C",
+    "expected_box": {
+      "ymin": 235,
+      "xmin": 330,
+      "ymax": 285,
+      "xmax": 430
+    },
+    "target_type": "text_passage"
+  },
+  {
+    "id": "PHARMA-002",
+    "domain": "quality_certificate",
+    "query": "What is the lot number for the AKTA ready Low Flow Kit in the Certificate of Quality?",
+    "expected_status": "direct",
+    "expected_page": 2,
+    "expected_value": 18356721.0,
+    "expected_unit": "lot",
+    "expected_text_snippet": "18356721",
+    "expected_box": {
+      "ymin": 155,
+      "xmin": 290,
+      "ymax": 205,
+      "xmax": 410
+    },
+    "target_type": "metadata"
+  },
+  {
+    "id": "PHARMA-003",
+    "domain": "quality_release",
+    "query": "What is the gamma irradiation dose range specified for inlets in the Certificate of Quality?",
+    "expected_status": "direct",
+    "expected_page": 3,
+    "expected_value": 25.0,
+    "expected_unit": "kGy",
+    "expected_text_snippet": "25.0 - 40.0 kGy",
+    "expected_box": {
+      "ymin": 365,
+      "xmin": 315,
+      "ymax": 415,
+      "xmax": 465
+    },
+    "target_type": "table_cell"
+  },
+  {
+    "id": "PHARMA-004",
+    "domain": "packaging_spec",
+    "query": "What material specification is defined for the Blister Tray in PKG-SPEC-2023-0847?",
+    "expected_status": "direct",
+    "expected_page": 4,
+    "expected_value": null,
+    "expected_unit": "PETG ASTM D1003",
+    "expected_text_snippet": "PETG ASTM D1003",
+    "expected_box": {
+      "ymin": 280,
+      "xmin": 245,
+      "ymax": 330,
+      "xmax": 520
+    },
+    "target_type": "table_cell"
+  },
+  {
+    "id": "PHARMA-005",
+    "domain": "change_control",
+    "query": "What was the ECN number for revision C in the Configuration Change History?",
+    "expected_status": "direct",
+    "expected_page": 5,
+    "expected_value": null,
+    "expected_unit": "ECN-2023-0847",
+    "expected_text_snippet": "ECN-2023-0847",
+    "expected_box": {
+      "ymin": 155,
+      "xmin": 205,
+      "ymax": 205,
+      "xmax": 360
+    },
+    "target_type": "table_cell"
+  },
+  {
+    "id": "PHARMA-006",
+    "domain": "bse_tse_compliance",
+    "query": "What is the assessment reference number for the BSE/TSE compliance declaration?",
+    "expected_status": "direct",
+    "expected_page": 6,
+    "expected_value": null,
+    "expected_unit": "BSE-RA-2023-AKTA-001",
+    "expected_text_snippet": "BSE-RA-2023-AKTA-001",
+    "expected_box": {
+      "ymin": 405,
+      "xmin": 270,
+      "ymax": 455,
+      "xmax": 500
+    },
+    "target_type": "text_passage"
+  },
+  {
+    "id": "PHARMA-007",
+    "domain": "physical_specs",
+    "query": "What is the maximum operating pressure for the AKTA ready Gradient Flow Section?",
+    "expected_status": "direct",
+    "expected_page": 7,
+    "expected_value": 5.0,
+    "expected_unit": "MPa",
+    "expected_text_snippet": "Max 5 MPa",
+    "expected_box": {
+      "ymin": 525,
+      "xmin": 245,
+      "ymax": 575,
+      "xmax": 375
+    },
+    "target_type": "table_cell"
+  },
+  {
+    "id": "PHARMA-008",
+    "domain": "supplier_audit",
+    "query": "When was the last on-site audit conducted for supplier Cytiva Sweden AB under code SUP-2019-0847?",
+    "expected_status": "direct",
+    "expected_page": 8,
+    "expected_value": null,
+    "expected_unit": "20 November 2023",
+    "expected_text_snippet": "20 November 2023",
+    "expected_box": {
+      "ymin": 178,
+      "xmin": 270,
+      "ymax": 228,
+      "xmax": 455
+    },
+    "target_type": "table_cell"
+  },
+  {
+    "id": "PHARMA-009",
+    "domain": "supplier_metrics",
+    "query": "What was the On-Time Delivery performance percentage for supplier Cytiva Sweden AB over the last 12 months?",
+    "expected_status": "direct",
+    "expected_page": 9,
+    "expected_value": 97.3,
+    "expected_unit": "%",
+    "expected_text_snippet": "97.3%",
+    "expected_box": {
+      "ymin": 440,
+      "xmin": 245,
+      "ymax": 490,
+      "xmax": 335
+    },
+    "target_type": "table_cell"
+  },
+  {
+    "id": "PHARMA-010",
+    "domain": "chain_of_custody",
+    "query": "What is the Cytiva Item Number for the AKTA ready Gradient Low Flow Section manufactured at Eysins?",
+    "expected_status": "direct",
+    "expected_page": 10,
+    "expected_value": 29021085.0,
+    "expected_unit": "Item #",
+    "expected_text_snippet": "29021085",
+    "expected_box": {
+      "ymin": 240,
+      "xmin": 30,
+      "ymax": 290,
+      "xmax": 140
+    },
+    "target_type": "table_cell"
+  },
+  {
+    "id": "PHARMA-011",
+    "domain": "unanswerable",
+    "query": "What was the tensile elongation at break percentage for the EPDM gasket after 500 autoclave cycles?",
+    "expected_status": "abstain",
+    "expected_page": null,
+    "expected_value": null,
+    "expected_unit": null,
+    "expected_box": null,
+    "target_type": null,
+    "expected_abstention_reason": "Tensile elongation after 500 autoclave cycles is not reported in this specification package."
+  },
+  {
+    "id": "PHARMA-012",
+    "domain": "unanswerable",
+    "query": "What was the total purchase order revenue in Euros for flow kit shipments to Japan in Q4 2023?",
+    "expected_status": "abstain",
+    "expected_page": null,
+    "expected_value": null,
+    "expected_unit": null,
+    "expected_box": null,
+    "target_type": null,
+    "expected_abstention_reason": "Financial transaction figures and Japanese sales volume are not contained in technical and quality documents."
+  }
+]

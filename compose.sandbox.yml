@@ -1,0 +1,14 @@
+services:
+  evid:
+    build:
+      context: .
+      dockerfile: Dockerfile.sandbox
+    environment:
+      EVID_LOCAL_STORAGE_DIR: /var/lib/evid/pages
+    ports:
+      - "8000:8000"
+    volumes:
+      - evid_sandbox_data:/var/lib/evid
+
+volumes:
+  evid_sandbox_data:

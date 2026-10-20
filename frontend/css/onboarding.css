@@ -1,0 +1,14 @@
+/* First-use screens show one next action instead of empty dashboards. */
+[hidden] { display: none !important; }
+.documents-view.is-empty > :not(#docsEmptyState):not(#libraryLoadStatus) { display: none; }
+.workspace-welcome { width:100%; max-width:720px; margin:clamp(12px, 5vh, 64px) auto; padding:clamp(24px, 5vw, 56px); background:var(--color-bg-surface); border:1px solid var(--color-border-subtle); border-radius:var(--radius-surface); display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; }
+.workspace-welcome h1 { max-width:560px; font-size:clamp(24px, 3vw, 30px); line-height:1.25; letter-spacing:-.025em; margin:0; }
+.workspace-welcome p { max-width:430px; font-size:15px; line-height:1.65; color:var(--color-text-secondary); margin:0; }
+.welcome-icon { display:grid; place-items:center; width:60px; height:60px; border-radius:16px; background:var(--color-info-bg); color:var(--color-primary); margin-bottom:8px; }
+.welcome-detail { font-size:12px; color:var(--color-text-muted); }
+.welcome-guide { font-size:13px; color:var(--color-primary); margin-top:8px; text-underline-offset:3px; }
+.feature-availability { width:100%; max-width:440px; padding:18px; margin:8px 0; border:1px solid var(--color-border-subtle); border-radius:var(--radius-control); background:var(--color-bg-app); }
+.feature-availability p { margin-top:10px; font-size:13px; }
+.help-steps { padding-left:20px; margin:16px 0; }
+.help-steps li { margin:10px 0; }
+@media(max-width:768px) { .workspace-welcome { margin:12px auto; padding:28px 20px; } .workspace-welcome .btn { min-height:44px; } }

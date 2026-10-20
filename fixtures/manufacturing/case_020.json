@@ -1,0 +1,8 @@
+{
+  "id": "case-020",
+  "category": "missing_procedure",
+  "seed_used": 42,
+  "generated_at": "2026-10-13T00:00:00Z",
+  "expected_outcome": "see category spec",
+  "hash": "a5f18a0ecd957e50"
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EvidenceAction",
+  "type": "object",
+  "required": ["id", "case_id", "action_type", "requested_at", "idempotency_key"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "case_id": { "type": "string", "format": "uuid" },
+    "action_type": { "type": "string", "enum": ["draft_ticket", "retrieve_procedure", "segment_image", "request_review", "approve", "abort"] },
+    "requested_at": { "type": "string", "format": "date-time" },
+    "idempotency_key": { "type": "string", "description": "Same key must not cause two side effects." },
+    "parameters": { "type": "object" },
+    "result": {
+      "type": "object",
+      "required": ["status", "label"],
+      "properties": {
+        "status": { "type": "string", "enum": ["success", "failure", "unsupported", "interrupted", "simulated"] },
+        "label": { "type": "string" },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "simulated_output": { "type": "boolean", "description": "True = output is simulated, not actual measurement." }
+      }
+    }
+  }
+}

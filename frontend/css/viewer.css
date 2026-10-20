@@ -1,0 +1,318 @@
+/* ==========================================================================
+   EVID EVIDENCE VIEWER STYLES
+   High-Res Canvas, Bounding Box Overlays, Page Filmstrip, Zoom & Text Drawer
+   ========================================================================== */
+
+.evidence-viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: #0F172A; /* dark neutral frame for crisp contrast with white document */
+  overflow: hidden;
+  position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   Viewer Top Toolbar
+   -------------------------------------------------------------------------- */
+.viewer-toolbar {
+  min-height: 48px;
+  background-color: #1E293B;
+  border-bottom: 1px solid #334155;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  color: #F8FAFC;
+  z-index: 20;
+  flex-shrink: 0;
+}
+
+.viewer-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.viewer-doc-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: #FFFFFF;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.viewer-page-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.viewer-page-indicator {
+  font-size: 12px;
+  color: #CBD5E1;
+  padding: 0 var(--space-2);
+}
+
+.page-jump-input {
+  width: 38px;
+  height: 26px;
+  text-align: center;
+  background: #0F172A;
+  border: 1px solid #475569;
+  border-radius: var(--radius-sm);
+  color: #FFFFFF;
+  font-size: 12px;
+}
+
+/* Center Zoom & Tool Controls */
+.viewer-toolbar-center {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  grid-column: 1 / -1;
+  grid-row: 2;
+  flex-wrap: wrap;
+}
+
+.viewer-tool-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #CBD5E1;
+  border-radius: var(--radius-sm);
+  height: 30px;
+  padding: 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.viewer-tool-btn:hover {
+  background: #334155;
+  color: #FFFFFF;
+}
+
+.viewer-tool-btn.active {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border-color: var(--color-primary);
+}
+
+.viewer-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+}
+
+/* --------------------------------------------------------------------------
+   Viewer Canvas & Viewport Area
+   -------------------------------------------------------------------------- */
+.viewer-main-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Collapsible Page Thumbnails Filmstrip */
+.viewer-thumbnails-panel {
+  width: 120px;
+  background: #182234;
+  border-right: 1px solid #334155;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  transition: width var(--transition-fast);
+}
+
+.viewer-thumbnails-panel.collapsed {
+  width: 0;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+}
+
+.thumbnail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+  background: transparent;
+  font-family: inherit;
+}
+
+.thumbnail-item:hover {
+  background: #253349;
+}
+
+.thumbnail-item.active {
+  border-color: var(--color-primary);
+  background: #253349;
+}
+
+.thumbnail-img {
+  width: 80px;
+  height: auto;
+  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  background: #FFFFFF;
+}
+
+.thumbnail-label {
+  font-size: 11px;
+  color: #94A3B8;
+}
+
+/* Viewport Scroll Container */
+.viewer-viewport {
+  flex: 1;
+  overflow: auto;
+  display: block;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-6);
+  background-color: #0F172A;
+  position: relative;
+}
+
+/* Document Page Wrapper (Normalized 1000x1000 coordinate plane) */
+.page-stage {
+  position: relative;
+  background-color: #FFFFFF;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  border-radius: 2px;
+  transform-origin: top center;
+  margin-inline: auto;
+  transition: transform var(--transition-fast);
+}
+
+.page-image {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* High-Precision Evidence Bounding Box Overlay */
+.bounding-box-overlay {
+  position: absolute;
+  border: 2px solid var(--color-evidence-box);
+  background-color: var(--color-evidence-box-bg);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25), 0 0 16px var(--color-evidence-box-glow);
+  border-radius: 3px;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 15;
+  transition: all var(--transition-fast);
+  animation: boxPulse 2s infinite ease-in-out;
+}
+
+@keyframes boxPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25), 0 0 12px var(--color-evidence-box-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.45), 0 0 22px rgba(37, 99, 235, 0.65);
+  }
+}
+
+.box-label-tag {
+  position: absolute;
+  top: -24px;
+  left: -2px;
+  background: var(--color-primary);
+  color: white;
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* --------------------------------------------------------------------------
+   Accessible Readable Source Excerpt Drawer
+   -------------------------------------------------------------------------- */
+.viewer-text-drawer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  background: #1E293B;
+  border-top: 2px solid var(--color-primary);
+  color: #F8FAFC;
+  padding: var(--space-4);
+  overflow-y: auto;
+  display: none;
+  z-index: 25;
+  box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+}
+
+.viewer-text-drawer.open {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.text-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #94A3B8;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 6px;
+}
+
+.text-drawer-content {
+  font-family: var(--font-family-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: #E2E8F0;
+  background: #0F172A;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.viewer-doc-title { max-width: 100%; width: 100%; }
+.viewer-page-indicator { padding: 0; white-space: nowrap; }
+.evidence-panel { container-type: inline-size; container-name: viewer; }
+@container viewer (max-width: 480px) {
+  .viewer-thumbnails-panel { width: 76px; padding-inline: 4px; }
+  .thumbnail-img { width: 56px; }
+  .viewer-viewport { padding: 12px; }
+  .viewer-toolbar { padding: 8px; }
+  .viewer-toolbar-left { gap: 4px 8px; }
+}
+
+/* Loading failures never leave a previous file's evidence on screen. */
+#viewerPageStatus { color: #CBD5E1; padding: 24px; font-size: 13px; }
+#viewerPageStatus[hidden], .page-stage[hidden] { display: none; }
+.viewer-tool-btn:disabled { opacity: .4; cursor: default; }

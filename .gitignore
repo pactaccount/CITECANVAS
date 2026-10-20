@@ -1,0 +1,24 @@
+# Secrets and developer-specific configuration
+.env
+.env.*
+!.env.production.example
+
+# Anonymous workspace cache and generated local data
+storage/
+frontend/public/pages/
+*.pdf
+!fixtures/evaluation/*.pdf
+
+# Python and JavaScript artifacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+
+# Local tooling and operating-system files
+.agents/
+.claude/
+.playwright-mcp/
+.DS_Store

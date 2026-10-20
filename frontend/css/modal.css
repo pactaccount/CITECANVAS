@@ -1,0 +1,204 @@
+/* ==========================================================================
+   EVID ACCESSIBLE MODAL DIALOGS
+   Upload, Section Review, Calculation Formula, Corrections, Settings, Help
+   ========================================================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(23, 32, 44, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: var(--space-4);
+  backdrop-filter: blur(2px);
+}
+
+.modal-overlay.open {
+  display: flex;
+}
+
+.modal-dialog {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-surface);
+  max-width: 680px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-modal);
+  border: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  animation: modalScaleIn var(--transition-fast);
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.modal-body {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.modal-footer {
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  background: var(--color-bg-surface-alt);
+  flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+   File Uploader Components
+   -------------------------------------------------------------------------- */
+.dropzone {
+  border: 2px dashed var(--color-border-medium);
+  border-radius: var(--radius-surface);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  background: var(--color-bg-app);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  transition: all var(--transition-fast);
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.dropzone-icon {
+  width: 44px;
+  height: 44px;
+  color: var(--color-primary);
+}
+
+.dropzone-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.dropzone-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Uploader File Rows */
+.upload-queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.upload-file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  font-size: var(--font-size-sm);
+}
+
+.file-info-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.file-name {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.file-size {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.file-status-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* --------------------------------------------------------------------------
+   Calculation Breakdown Modal
+   -------------------------------------------------------------------------- */
+.calc-breakdown-card {
+  background: var(--color-bg-surface-alt);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-surface);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.calc-formula-display {
+  font-family: var(--font-family-mono);
+  font-size: 15px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  background: var(--color-bg-surface);
+  padding: var(--space-3);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-primary-border);
+  text-align: center;
+}
+
+.calc-step-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) 0;
+  border-bottom: 1px dashed var(--color-border-subtle);
+}
+
+@media (max-width: 650px) {
+  .modal-header, .modal-body, .modal-footer { padding: 16px; }
+  .upload-file-row, .file-status-group { flex-wrap: wrap; gap: 8px; }
+  .file-status-group .badge { white-space: normal; }
+  .calc-step-row { align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+}

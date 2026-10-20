@@ -1,0 +1,390 @@
+/* ==========================================================================
+   EVID EXTRACT FIELDS (STRUCTURED REVIEW) STYLES
+   4-Step Wizard: Choose Docs, Define Fields, Preview, Run & Review
+   ========================================================================== */
+
+.extract-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   4-Step Wizard Stepper
+   -------------------------------------------------------------------------- */
+.wizard-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-surface);
+  padding: var(--space-3) var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+  font-size: 14px;
+  font-family: inherit;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  min-height: 40px;
+}
+
+.wizard-step:disabled { cursor: default; }
+.step-num { flex-shrink: 0; }
+
+.wizard-step.active {
+  opacity: 1;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+.wizard-step.completed {
+  opacity: 0.95;
+  color: var(--color-success-text);
+  font-weight: var(--font-weight-medium);
+}
+
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-bg-surface-alt);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.wizard-step.active .step-num {
+  background: var(--color-primary);
+  color: white;
+}
+
+.wizard-step.completed .step-num {
+  background: var(--color-success);
+  color: white;
+}
+
+.step-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-subtle);
+  margin: 0 var(--space-3);
+}
+
+/* --------------------------------------------------------------------------
+   Step Panels
+   -------------------------------------------------------------------------- */
+.wizard-step-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.extract-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-surface);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Step 1: Choose Documents Checklist */
+.doc-selection-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.doc-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 440px;
+  overflow-y: auto;
+  padding: var(--space-1);
+}
+
+.doc-check-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.doc-check-item:hover {
+  background: var(--color-bg-surface-hover);
+  border-color: var(--color-border-strong);
+}
+
+.doc-check-item.selected {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary-border);
+}
+
+.doc-check-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.doc-check-title {
+  font-weight: 500;
+  color: var(--color-text-primary);
+  font-size: 14px;
+}
+
+.doc-check-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Step 2: Define Fields Table */
+.fields-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.fields-table th {
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-surface-alt);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border-subtle);
+  text-align: left;
+}
+
+.fields-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+}
+
+.field-error-banner {
+  display: none;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-control);
+  font-size: 13px;
+  color: var(--color-error-text);
+}
+
+/* Step 3: Preview Panel */
+.preview-summary-card {
+  background: var(--color-bg-surface-alt);
+  border-radius: var(--radius-control);
+  padding: var(--space-3) var(--space-4);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-3);
+}
+
+.preview-doc-card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.preview-field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--color-border-subtle);
+}
+
+/* Step 4: Extraction Results Matrix */
+.matrix-container {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-surface);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.matrix-toolbar {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface-alt);
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.matrix-scroll-wrapper {
+  overflow-x: auto;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-base);
+}
+
+.matrix-table thead th {
+  position: sticky;
+  top: 0;
+  background: #F8FAFC;
+  z-index: 5;
+  padding: var(--space-3) var(--space-4);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-subtle);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.matrix-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  vertical-align: middle;
+}
+
+.matrix-table tr:hover td {
+  background-color: var(--color-bg-surface-hover);
+}
+
+/* Cell Value & State Badges */
+.matrix-cell-interactive {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.matrix-cell-interactive:hover {
+  background: var(--color-primary-light);
+}
+
+.status-pill-extracted {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.status-pill-derived {
+  font-weight: 500;
+  color: var(--color-info-text);
+  background: var(--color-info-bg);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.status-pill-not-found {
+  font-style: italic;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.status-pill-na {
+  color: #94A3B8;
+  font-size: 12px;
+}
+
+.status-pill-uncertain {
+  color: var(--color-warning-text);
+  background: var(--color-warning-bg);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.status-pill-failed {
+  color: var(--color-error-text);
+  background: var(--color-error-bg);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.citation-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.citation-pill:hover {
+  background: #D9E4F7;
+}
+
+.human-corrected-pill {
+  font-size: 10px;
+  background: #E0E7FF;
+  color: #3730A3;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.fields-table { min-width: 760px; }
+.doc-check-left { min-width: 0; }
+.doc-check-title { overflow-wrap: anywhere; }
+.matrix-toolbar > div:last-child { display: flex; flex-wrap: wrap; }
+@container task (max-width: 700px) {
+  .wizard-stepper { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; gap: 8px; }
+  .step-divider-line { display: none; }
+  .wizard-step { font-size: 12px; }
+  .preview-grid { grid-template-columns: minmax(0, 1fr); }
+  .extract-card { padding: 16px; }
+  .extract-card > div { flex-wrap: wrap; gap: 12px; }
+  .doc-check-item { align-items: flex-start; gap: 8px; }
+  .preview-field-row { gap: 12px; flex-wrap: wrap; }
+}
+
+.matrix-table { min-width: 1100px; }
+.matrix-table td { min-width: 150px; }

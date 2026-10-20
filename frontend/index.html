@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    // The upload API and source images require the local HTTP server.
+    if (location.protocol === "file:") location.replace("http://localhost:8000/");
+  </script>
+  <title>Evid — Document workspace</title>
+  <meta name="description" content="Your browser-scoped PDF document workspace.">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/documents.css">
+  <link rel="stylesheet" href="css/ask.css">
+  <link rel="stylesheet" href="css/viewer.css">
+  <link rel="stylesheet" href="css/extract.css">
+  <link rel="stylesheet" href="css/compare.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/onboarding.css">
+  <link rel="stylesheet" href="css/workflows.css">
+</head>
+<body>
+  <div class="app-root">
+
+    <!-- ======================================================================
+         TOP NAVIGATION BAR (64px)
+         ====================================================================== -->
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="btn btn-subtle btn-icon mobile-menu-toggle" id="btnMobileMenu" aria-label="Open navigation" aria-controls="appSidebar" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="brand-badge">
+          <div class="brand-logo-icon" aria-hidden="true">E</div>
+          <span>Evid</span>
+          <span class="version-tag">Workspace</span>
+        </div>
+
+        <div class="topbar-breadcrumbs">
+          <span class="breadcrumb-separator" aria-hidden="true">/</span>
+          <div class="project-select-btn project-context" title="Current project">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span id="currentProjectName">My workspace</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Activity Tabs (Documents, Ask, Extract, Compare) -->
+      <nav class="topbar-center" role="navigation" aria-label="Main activities">
+        <div class="activity-nav" role="tablist" aria-label="Document activities">
+          <button class="nav-tab active" data-tab="documents" id="tabDocuments" role="tab" aria-controls="viewDocuments" aria-selected="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            <span>Documents</span>
+            <span class="nav-tab-badge" id="topbarDocBadge" hidden>0</span>
+          </button>
+
+          <button class="nav-tab" data-tab="ask" id="tabAsk" role="tab" aria-controls="viewAsk" aria-selected="false" tabindex="-1">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>Ask a question</span>
+          </button>
+
+          <button class="nav-tab" data-tab="extract" id="tabExtract" role="tab" aria-controls="viewExtract" aria-selected="false" tabindex="-1">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+            <span>Build a table</span>
+          </button>
+
+          <button class="nav-tab" data-tab="compare" id="tabCompare" role="tab" aria-controls="viewCompare" aria-selected="false" tabindex="-1">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M16 3h5v5"></path>
+              <path d="M4 20L21 3"></path>
+              <path d="M21 16v5h-5"></path>
+              <path d="M15 15l6 6"></path>
+              <path d="M4 4l5 5"></path>
+            </svg>
+            <span>Compare files</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Right Top Actions -->
+      <div class="topbar-right">
+        <span class="local-workspace-label" title="This browser has its own anonymous workspace. Your other tabs share it."><span aria-hidden="true"></span>Browser workspace</span>
+        <button class="btn btn-primary btn-sm" id="btnTopAddDocs" title="Upload new document">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Add documents</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         APP BODY (Collapsible Sidebar + Split-Screen Workspace)
+         ====================================================================== -->
+    <div class="app-body">
+
+      <!-- Left Sidebar (232px default, 64px collapsed) -->
+      <aside class="sidebar" id="appSidebar" role="complementary" aria-label="Sidebar navigation">
+        <div>
+          <div class="sidebar-header">
+            <span class="sidebar-title">Workspace</span>
+            <button class="btn btn-subtle btn-icon-sm" id="btnToggleSidebar" title="Toggle sidebar width" style="color: #94A3B8;" aria-label="Collapse sidebar" aria-controls="appSidebar" aria-expanded="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="sidebar-content">
+            <div>
+              <div class="sidebar-section-title">Navigation</div>
+              <ul class="sidebar-nav-list">
+                <li>
+                  <button class="sidebar-item-btn" id="sidebarNavDocs">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    </svg>
+                    <span class="sidebar-item-text">Documents Library</span>
+                  </button>
+                </li>
+                <li>
+                  <button class="sidebar-item-btn" id="sidebarNavAsk">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span class="sidebar-item-text">Ask a question</span>
+                  </button>
+                </li>
+                <li>
+                  <button class="sidebar-item-btn" id="sidebarNavExtract">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    </svg>
+                    <span class="sidebar-item-text">Build a table</span>
+                  </button>
+                </li>
+                <li>
+                  <button class="sidebar-item-btn" id="sidebarNavCompare">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M16 3h5v5"></path>
+                      <path d="M4 20L21 3"></path>
+                    </svg>
+                    <span class="sidebar-item-text">Compare files</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="sidebar-section-title">Projects</div>
+              <ul class="sidebar-nav-list">
+                <li>
+                  <div class="sidebar-item-btn project-card">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span class="sidebar-item-text">My workspace</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <button class="sidebar-item-btn" id="btnSidebarSettings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span class="sidebar-item-text">Settings</span>
+          </button>
+          <button class="sidebar-item-btn" id="btnSidebarHelp">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span class="sidebar-item-text">Help</span>
+          </button>
+        </div>
+      </aside>
+      <button class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Close navigation" tabindex="-1" hidden></button>
+
+      <!-- Main Workspace Container (Split Area) -->
+      <div class="workspace" id="workspaceContainer">
+
+        <!-- Primary Task Area -->
+        <main class="task-area" id="taskArea" role="main">
+
+          <!-- ================================================================
+               ACTIVITY 1: DOCUMENTS LIBRARY VIEW
+               ================================================================ -->
+          <section class="documents-view is-empty" id="viewDocuments" role="tabpanel" aria-labelledby="tabDocuments" style="display: flex;">
+            <div class="workspace-welcome" id="docsEmptyState">
+              <div class="welcome-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 12v6M9 15h6"/></svg></div>
+              <span class="section-eyebrow">Documents</span>
+              <h1>Your workspace is ready.</h1>
+              <p>Add a PDF to view its pages and keep your documents in one place.</p>
+              <button class="btn btn-primary" id="btnFirstUpload">Upload your first PDF</button>
+              <span class="welcome-detail">PDF files · up to 25 MB each</span>
+              <a class="welcome-guide" href="guide.html" target="_blank" rel="noopener">New here? Read the quick guide ↗</a>
+            </div>
+            <!-- Mission Banner -->
+            <div class="mission-banner">
+              <div>
+                <span class="section-eyebrow">Document library</span>
+                <h1>Documents</h1>
+                <p>
+                  Open a file to view its pages. Expand it to see the sections inside.
+                </p>
+                <span class="sample-context-note" id="librarySampleNote" hidden></span>
+              </div>
+              <div class="mission-actions">
+                <button class="btn btn-primary btn-sm" id="btnBannerUpload">
+                  Upload Documents
+                </button>
+              </div>
+            </div>
+            <div class="library-summary" aria-label="Library overview">
+              <div class="library-summary-item"><span class="summary-label">PDF files</span><strong id="libraryFileCount">0</strong><span class="summary-detail">Original uploaded PDFs</span></div>
+              <div class="library-summary-item"><span class="summary-label">Sections</span><strong id="librarySectionCount">0</strong><span class="summary-detail">Organized within your files</span></div>
+              <div class="library-summary-item"><span class="summary-label">To review</span><strong id="libraryReviewCount">0</strong><span class="summary-detail">Confirm titles and page ranges</span></div>
+            </div>
+
+            <!-- Toolbar & Filter Controls -->
+            <p id="libraryLoadStatus" role="status" hidden></p>
+            <div class="documents-toolbar">
+              <div class="toolbar-search-group">
+                <div class="search-input-wrapper">
+                  <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input type="search" class="input-text search-input" id="docSearchInput" aria-label="Search documents" placeholder="Search documents…">
+                </div>
+
+                <div class="filter-group">
+                  <select class="select-input" id="docTypeFilter" aria-label="Filter by document type">
+                    <option value="all">All Document Types</option>
+                    <option value="Document">Document</option>
+                    <option value="Certificate">Certificate</option>
+                    <option value="Technical Specification">Technical Specification</option>
+                    <option value="Declaration">Declaration</option>
+                    <option value="Audit Report">Audit Report</option>
+                    <option value="Chain of Custody">Chain of Custody</option>
+                    <option value="Correspondence">Correspondence</option>
+                  </select>
+
+                  <select class="select-input" id="docStatusFilter" aria-label="Filter by review status">
+                    <option value="all">All Statuses</option>
+                    <option value="confirmed">User-confirmed</option>
+                    <option value="suggested">Suggested (AI)</option>
+                    <option value="imported">Imported</option>
+                  </select>
+
+                  <button class="btn btn-subtle btn-sm" id="btnClearDocFilters" style="display: none;">
+                    Clear filters
+                  </button>
+                </div>
+              </div>
+
+              <div id="docsCountLabel" style="font-size: 13px; color: var(--color-text-secondary);">
+                0 documents
+              </div>
+            </div>
+
+            <!-- Documents Data Table -->
+            <p class="table-scroll-hint">Scroll horizontally to see all document details and actions.</p>
+            <div class="table-container">
+              <table class="doc-table" id="documentsTable" aria-label="Project documents">
+                <thead>
+                  <tr>
+                    <th style="width: 380px;">Document / Sub-Document</th>
+                    <th>Type</th>
+                    <th>Pages</th>
+                    <th>Status</th>
+                    <th>Added</th>
+                    <th style="width: 240px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="docsTableBody">
+                  <!-- Rendered dynamically by documents.js -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- ================================================================
+               ACTIVITY 2: ASK (GROUNDED Q&A) VIEW
+               ================================================================ -->
+          <section class="ask-view" id="viewAsk" role="tabpanel" aria-labelledby="tabAsk" style="display: none;">
+            <div class="workspace-welcome workflow-welcome">
+              <span class="section-eyebrow">Ask</span>
+              <h1>Ask questions about your documents.</h1>
+              <p>Find an answer and check the page it came from.</p>
+              <div class="feature-availability"><span class="badge badge-neutral">In development</span><p>Question answering for uploaded PDFs is not connected yet.</p></div>
+              <a class="btn btn-secondary" href="#documents" onclick="event.preventDefault(); state.setActiveTab('documents')">Go to documents</a>
+              <a class="welcome-guide" href="guide.html#ask" target="_blank" rel="noopener">How this page works ↗</a>
+            </div>
+          </section>
+
+          <!-- ================================================================
+               ACTIVITY 3: EXTRACT FIELDS (STRUCTURED REVIEW) VIEW
+               ================================================================ -->
+          <section class="extract-view" id="viewExtract" role="tabpanel" aria-labelledby="tabExtract" style="display: none;">
+            <div class="workspace-welcome workflow-welcome">
+              <span class="section-eyebrow">Extract</span>
+              <h1>Turn document details into a table.</h1>
+              <p>Choose the details you need, such as a date or a reference number.</p>
+              <div class="feature-availability"><span class="badge badge-neutral">In development</span><p>Extraction for uploaded PDFs is not connected yet.</p></div>
+              <a class="btn btn-secondary" href="#documents" onclick="event.preventDefault(); state.setActiveTab('documents')">Go to documents</a>
+              <a class="welcome-guide" href="guide.html#extract" target="_blank" rel="noopener">How this page works ↗</a>
+            </div>
+          </section>
+
+          <!-- ================================================================
+               ACTIVITY 4: COMPARE DOCUMENTS VIEW
+               ================================================================ -->
+          <section class="compare-view" id="viewCompare" role="tabpanel" aria-labelledby="tabCompare" style="display: none;">
+            <div class="workspace-welcome workflow-welcome">
+              <span class="section-eyebrow">Compare</span>
+              <h1>Compare two documents.</h1>
+              <p>See differences between two files and check the supporting pages.</p>
+              <div class="feature-availability"><span class="badge badge-neutral">In development</span><p>Comparison for uploaded PDFs is not connected yet.</p></div>
+              <a class="btn btn-secondary" href="#documents" onclick="event.preventDefault(); state.setActiveTab('documents')">Go to documents</a>
+              <a class="welcome-guide" href="guide.html#compare" target="_blank" rel="noopener">How this page works ↗</a>
+            </div>
+          </section>
+
+        </main>
+
+        <!-- Resizable Vertical Divider Handle -->
+        <div class="resize-divider" id="resizeDivider" title="Drag to resize evidence viewer" role="separator" aria-orientation="vertical"></div>
+
+        <!-- ================================================================
+             EVIDENCE VIEWER PANEL (Opens beside task area)
+             ================================================================ -->
+        <aside class="evidence-panel" id="evidencePanel" role="complementary" aria-label="Evidence viewer">
+          <div class="evidence-viewer-container">
+            <!-- Viewer Top Toolbar -->
+            <div class="viewer-toolbar">
+              <div class="viewer-toolbar-left">
+                <span class="viewer-doc-title" id="viewerDocTitle">Document viewer</span>
+                <div class="viewer-page-nav">
+                  <button class="viewer-tool-btn" id="btnPrevPage" title="Previous page" aria-label="Previous page">&larr;</button>
+                  <input type="text" class="page-jump-input" id="pageJumpInput" value="1" aria-label="Current page number">
+                  <button class="viewer-tool-btn" id="btnNextPage" title="Next page" aria-label="Next page">&rarr;</button>
+                </div>
+                <span class="viewer-page-indicator" id="viewerPageIndicator">No document open</span>
+              </div>
+
+              <div class="viewer-toolbar-center">
+                <button class="viewer-tool-btn" id="btnZoomOut" title="Zoom out" aria-label="Zoom out">-</button>
+                <button class="viewer-tool-btn" id="btnZoomReset" title="Reset zoom / Fit to width">Fit</button>
+                <button class="viewer-tool-btn" id="btnZoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+                <button class="viewer-tool-btn active" id="btnToggleHighlights" title="Toggle evidence highlight box">&#9679; Highlights</button>
+                <button class="viewer-tool-btn active" id="btnToggleThumbnails" title="Toggle page thumbnails">&#9638; Thumbnails</button>
+                <button class="viewer-tool-btn" id="btnToggleTextDrawer" title="View readable text transcript">Text</button>
+                <button class="viewer-tool-btn" id="btnToggleFullscreen" title="Toggle full screen">⛶ Fullscreen</button>
+              </div>
+
+              <div class="viewer-toolbar-right">
+                <button class="viewer-tool-btn" id="btnCloseEvidence" title="Close evidence viewer (Esc)" aria-label="Close evidence viewer">
+                  &times; Close
+                </button>
+              </div>
+            </div>
+
+            <!-- Viewer Main Body -->
+            <div class="viewer-main-body">
+              <!-- Collapsible Filmstrip Thumbnails Panel -->
+              <div class="viewer-thumbnails-panel" id="thumbnailsPanel" role="region" aria-label="Page thumbnails">
+                <!-- Rendered dynamically by viewer.js -->
+              </div>
+
+              <!-- Viewport with Scalable Page Stage -->
+              <div class="viewer-viewport" id="viewerViewport">
+                <p id="viewerPageStatus" role="status" hidden></p>
+                <div class="page-stage" id="pageStage">
+                  <img alt="Document page image" class="page-image" id="pageImage">
+                  <div class="box-overlay-layer" id="boxOverlayLayer">
+                    <!-- Bounding box overlays placed dynamically -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Accessible Readable Source Text Drawer -->
+              <div class="viewer-text-drawer" id="viewerTextDrawer" role="region" aria-label="Accessible source text">
+                <div class="text-drawer-header">
+                  <span>Accessible Source Excerpt (Native Text Layer)</span>
+                  <button class="btn btn-subtle btn-sm" onclick="state.toggleTextDrawer()" style="color: #CBD5E1;" aria-label="Close text drawer">&times;</button>
+                </div>
+                <div class="text-drawer-content" id="textDrawerContent"></div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 1: FILE UPLOADER MODAL
+         ====================================================================== -->
+    <div class="modal-overlay" id="uploadModalOverlay" role="dialog" aria-modal="true" aria-labelledby="uploadModalTitle">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 class="modal-title" id="uploadModalTitle">Upload PDF files</h2>
+          <button class="btn btn-subtle btn-icon-sm" id="btnCloseUploadModal" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="dropzone" id="uploadDropzone" role="button" tabindex="0" aria-label="Browse PDF files to upload">
+            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <div class="dropzone-title">Drag &amp; drop PDF files here, or click to browse</div>
+            <div class="dropzone-hint">Supports PDF (.pdf) &middot; Maximum 25 MB per file &middot; Multi-file batch allowed</div>
+            <input type="file" id="uploadFileInput" multiple accept=".pdf" style="display: none;">
+          </div>
+
+          <div style="font-size: 12px; color: var(--color-text-muted);">
+            <strong>Stored locally:</strong> Your files are saved on this computer.
+          </div>
+
+          <div class="upload-queue-list" id="uploadQueueList">
+            <!-- Rendered dynamically by uploader.js -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="btnDoneUpload">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 2: REVIEW DOCUMENT SECTIONS MODAL
+         ====================================================================== -->
+    <div class="modal-overlay" id="boundaryModalOverlay" role="dialog" aria-modal="true" aria-labelledby="boundarySubdocTitle">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 class="modal-title" id="boundarySubdocTitle">Review document sections</h2>
+          <button class="btn btn-subtle btn-icon-sm" id="btnCancelBoundary" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 13px; color: var(--color-text-secondary);">
+            Adjust the logical boundaries and classification of this section. <strong>Changes do not alter the source PDF file.</strong>
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div>
+              <label style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);" for="boundaryEditTitle">Section Title</label>
+              <input type="text" class="input-text" id="boundaryEditTitle" style="width: 100%;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+              <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);" for="boundaryEditType">Document Type</label>
+                <select class="select-input" id="boundaryEditType" style="width: 100%;">
+                  <option value="Document">Document</option>
+                  <option value="Certificate">Certificate</option>
+                  <option value="Technical Specification">Technical Specification</option>
+                  <option value="Declaration">Declaration</option>
+                  <option value="Audit Report">Audit Report</option>
+                  <option value="Chain of Custody">Chain of Custody</option>
+                  <option value="Correspondence">Correspondence</option>
+                </select>
+              </div>
+
+              <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);" for="boundaryEditStartPage">Start Page</label>
+                <input type="number" class="input-text" id="boundaryEditStartPage" min="1" max="10" style="width: 100%;">
+              </div>
+
+              <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);" for="boundaryEditEndPage">End Page</label>
+                <input type="number" class="input-text" id="boundaryEditEndPage" min="1" max="10" style="width: 100%;">
+              </div>
+            </div>
+
+            <div style="background: var(--color-bg-surface-alt); padding: 12px; border-radius: var(--radius-control); border: 1px solid var(--color-border-subtle);">
+              <span style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);">Scoped Identifiers Detected:</span>
+              <ul id="boundaryIdentifiersList" style="font-size: 12px; color: var(--color-text-muted); margin-top: 6px; padding-left: 18px;"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-subtle" id="btnResetBoundary">Reset to Suggested</button>
+          <button class="btn btn-primary" id="btnSaveBoundary">Save &amp; Confirm Section</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 3: DETERMINISTIC CALCULATION BREAKDOWN MODAL
+         ====================================================================== -->
+    <div class="modal-overlay" id="calcModalOverlay" role="dialog" aria-modal="true" aria-labelledby="calcModalTitle">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 class="modal-title" id="calcModalTitle">Deterministic Unit Calculation</h2>
+          <button class="btn btn-subtle btn-icon-sm" id="btnCloseCalcModal" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 13px; color: var(--color-text-secondary);">
+            Evid routes unit conversions and arithmetic to deterministic calculations without LLM rounding hallucinations.
+          </p>
+
+          <div class="calc-breakdown-card">
+            <div class="calc-formula-display" id="calcModalFormula">
+              No calculation selected
+            </div>
+
+            <div class="calc-step-row">
+              <span style="color: var(--color-text-muted);">Nature of Value</span>
+              <strong id="calcModalNature" style="color: var(--color-text-primary);">Physical Document Fact</strong>
+            </div>
+
+            <div class="calc-step-row">
+              <span style="color: var(--color-text-muted);">Input Value</span>
+              <strong id="calcModalInput">5.0 MPa</strong>
+            </div>
+
+            <div class="calc-step-row">
+              <span style="color: var(--color-text-muted);">Output Value</span>
+              <strong id="calcModalOutput" style="color: var(--color-success-text);">50.0 bar</strong>
+            </div>
+
+            <div class="calc-step-row">
+              <span style="color: var(--color-text-muted);">Conversion Factor</span>
+              <span id="calcModalFactor" style="font-family: monospace; font-size: 12px;">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="state.closeCalculation()">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 4: INLINE HUMAN CORRECTION MODAL
+         ====================================================================== -->
+    <div class="modal-overlay" id="correctionModalOverlay" role="dialog" aria-modal="true" aria-labelledby="correctionModalTitle">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 class="modal-title" id="correctionModalTitle">Human Review &amp; Value Correction</h2>
+          <button class="btn btn-subtle btn-icon-sm" id="btnCancelCorrection" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 13px; color: var(--color-text-secondary);">
+            Target Field: <strong id="correctionTargetLabel" style="color: var(--color-text-primary);">Max Operating Pressure</strong>
+          </p>
+
+          <div style="background: var(--color-warning-bg); border: 1px solid var(--color-warning-border); padding: 10px 14px; border-radius: var(--radius-control); font-size: 13px; color: var(--color-warning-text);">
+            Original Extracted Value: <strong id="correctionOriginalValue">50.0 bar</strong>
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);" for="correctionNewValueInput">Corrected / Verified Value</label>
+            <input type="text" class="input-text" id="correctionNewValueInput" style="width: 100%;">
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);" for="correctionNoteInput">Reviewer Audit Note (Optional)</label>
+            <input type="text" class="input-text" id="correctionNoteInput" placeholder="e.g., Verified against physical engineering drawing AD" style="width: 100%;">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-subtle" onclick="state.closeCorrection()">Cancel</button>
+          <button class="btn btn-primary" id="btnSaveCorrection">Save Human Correction</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 5: REPORT ISSUE MODAL
+         ====================================================================== -->
+    <div class="modal-overlay" id="reportModalOverlay" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 class="modal-title" id="reportModalTitle">Report Finding Issue</h2>
+          <button class="btn btn-subtle btn-icon-sm" id="btnCloseReportModal" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 13px; color: var(--color-text-secondary);">
+            Record feedback for this browser session. Feedback is kept locally and is not sent to a support team.
+          </p>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);" for="reportIssueReason">Issue Category</label>
+            <select class="select-input" id="reportIssueReason" style="width: 100%;">
+              <option value="Incorrect Citation Region">Incorrect Citation Region</option>
+              <option value="Wrong Value Extracted">Wrong Value Extracted</option>
+              <option value="Unwarranted Fact Association">Unwarranted Fact Association</option>
+              <option value="Missing Scope Constraint">Missing Scope Constraint</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; color: var(--color-text-secondary);" for="reportIssueNotes">Audit Notes</label>
+            <textarea class="input-text" id="reportIssueNotes" placeholder="Describe the discrepancy..." style="width: 100%; height: 80px; padding: 8px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-subtle" id="btnCancelReportIssue">Cancel</button>
+          <button class="btn btn-primary" id="btnSubmitReportIssue">Record feedback locally</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 6: SETTINGS MODAL
+         ====================================================================== -->
+    <div class="modal-overlay" id="settingsModalOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 class="modal-title" id="settingsModalTitle">Workspace Settings</h2>
+          <button class="btn btn-subtle btn-icon-sm" id="btnCloseSettingsModal" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="background: var(--color-bg-surface-alt); padding: 12px; border-radius: var(--radius-control);">
+              <strong>Workspace:</strong> Anonymous to this browser. Other browser profiles receive a separate workspace automatically.
+            </div>
+            <div style="font-size: 13px; color: var(--color-text-secondary);">
+              <strong>Across your tabs:</strong> <span class="badge badge-neutral">Shared</span>
+              <p style="margin-top: 4px; font-size: 12px; color: var(--color-text-muted);">
+                Uploads and their results appear in other tabs of this browser. No sign-in is required.
+              </p>
+            </div>
+            <div style="font-size: 13px; color: var(--color-text-secondary);">
+              <strong>Evidence Rendering DPI:</strong> 300 DPI page images.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-subtle" id="btnClearWorkspace" title="Delete all PDFs and results from this browser workspace">Clear this workspace</button>
+          <button class="btn btn-primary" onclick="state.closeSettings()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================================
+         MODAL 7: HELP MODAL
+         ====================================================================== -->
+    <div class="modal-overlay" id="helpModalOverlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 class="modal-title" id="helpModalTitle">Evid Workspace Help</h2>
+          <button class="btn btn-subtle btn-icon-sm" id="btnCloseHelpModal" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body" style="font-size: 13px; line-height: 1.6; color: var(--color-text-secondary);">
+          <p>Evid helps you keep PDF files together and inspect their original pages.</p>
+          <ol class="help-steps">
+            <li><strong>Add a PDF.</strong> Use Add documents in the header.</li>
+            <li><strong>Open it.</strong> In Documents, choose Open to see the full file or expand a file to see its sections.</li>
+            <li><strong>Read its pages.</strong> Use page arrows, thumbnails, zoom, or Text in the document viewer.</li>
+          </ol>
+          <p><strong>Available now:</strong> PDF uploads, document browsing, page viewing, and native text when present.</p>
+          <p style="margin-top:12px"><strong>Analysis:</strong> Ask and Extract use NVIDIA cloud analysis after you enable it. Compare finds native-text changes between two PDFs. Always check model answers against their source pages.</p>
+          <p style="margin-top:16px"><a href="guide.html" target="_blank" rel="noopener">Open the full navigation guide ↗</a></p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="state.closeHelp()">Done</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/state.js"></script>
+  <script src="js/viewer.js"></script>
+  <script src="js/documents.js"></script>
+  <script src="js/ask.js"></script>
+  <script src="js/extract.js"></script>
+  <script src="js/compare.js"></script>
+  <script src="js/uploader.js"></script>
+  <script src="js/workflows.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.production.example
+.git
+.venv
+.pytest_cache
+__pycache__/
+*/__pycache__/
+storage/
+frontend/public/pages/
+*.pyc
