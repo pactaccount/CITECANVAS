@@ -203,5 +203,5 @@ document.addEventListener("DOMContentLoaded", () => {
   switchTab("documents");
   state.loadUploadedDocuments();
 
-  console.log("Evid Document Intelligence UI successfully initialized.");
+  console.log("CiteCanvas Document Intelligence UI successfully initialized.");
 });

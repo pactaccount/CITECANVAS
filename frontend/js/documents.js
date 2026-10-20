@@ -34,7 +34,7 @@ class DocumentsController {
       const loadStatus = document.getElementById("libraryLoadStatus");
       if (loadStatus && ["library_loading", "library_loaded", "library_load_error"].includes(event)) {
         loadStatus.hidden = event === "library_loaded";
-        loadStatus.textContent = event === "library_loading" ? "Loading saved source files…" : event === "library_load_error" ? "Saved source files could not be loaded. Check the Evid server, then refresh this page." : "";
+        loadStatus.textContent = event === "library_loading" ? "Loading saved source files…" : event === "library_load_error" ? "Saved source files could not be loaded. Check the CiteCanvas server, then refresh this page." : "";
       }
       if (["subdoc_updated", "doc_search_changed", "document_added"].includes(event)) {
         this.render();

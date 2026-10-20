@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: evid
+    name: citecanvas
     runtime: docker
     healthCheckPath: /api/health
     autoDeployTrigger: commit
@@ -12,7 +12,7 @@ services:
       - key: EVID_COOKIE_SECURE
         value: "true"
       - key: OTEL_SERVICE_NAME
-        value: evid
+        value: citecanvas
       - key: EVID_ENVIRONMENT
         value: production
       - key: OTEL_EXPORTER_OTLP_PROTOCOL

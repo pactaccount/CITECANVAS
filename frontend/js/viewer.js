@@ -78,7 +78,7 @@ class EvidenceViewerController {
       this.boxLayer.replaceChildren();
       if (this.pageStatus) {
         this.pageStatus.hidden = false;
-        this.pageStatus.textContent = `Could not load PDF page ${state.viewerPage} of ${this.currentDocument?.filename || "the selected file"}. Check the Evid server and reopen this source.`;
+        this.pageStatus.textContent = `Could not load PDF page ${state.viewerPage} of ${this.currentDocument?.filename || "the selected file"}. Check the CiteCanvas server and reopen this source.`;
       }
     });
     // Page jump input: handle Enter key and change

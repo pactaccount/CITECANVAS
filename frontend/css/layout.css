@@ -48,14 +48,17 @@
 .brand-logo-icon {
   width: 28px;
   height: 28px;
-  background-color: var(--color-primary);
-  color: white;
+  overflow: hidden;
   border-radius: var(--radius-control);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--font-weight-bold);
-  font-size: 14px;
+}
+
+.brand-logo-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .version-tag {

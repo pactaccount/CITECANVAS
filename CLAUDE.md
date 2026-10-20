@@ -1,6 +1,6 @@
-# EvidenceOps — Project CLI / Build Notes
+# CiteCanvas — Project CLI / Build Notes
 
-Product: EvidenceOps (P1) — Multimodal Evidence and Workflow Platform
+Product: CiteCanvas — Multimodal Evidence and Workflow Platform
 Status: Milestone 1 (contracts/fixtures) in progress. Plan approved standalone.
 
 ## Actual build commands (verified on this host)

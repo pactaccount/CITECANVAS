@@ -528,7 +528,7 @@ class ExtractController {
     // Header info
     const summaryCard = document.createElement("div");
     summaryCard.className = "preview-summary-card";
-    summaryCard.textContent = `Previewing extraction for first ${Math.min(2, selectedSubdocs.length)} of ${selectedSubdocs.length} selected documents against ${state.customFields.length} defined fields. Evid grounds each finding in verified document coordinates.`;
+    summaryCard.textContent = `Previewing extraction for first ${Math.min(2, selectedSubdocs.length)} of ${selectedSubdocs.length} selected documents against ${state.customFields.length} defined fields. CiteCanvas grounds each finding in verified document coordinates.`;
     this.previewContainer.appendChild(summaryCard);
 
     // Grid of preview cards

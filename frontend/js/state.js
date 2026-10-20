@@ -147,7 +147,7 @@ class AppStateManager {
     this.notify("library_loading");
     try {
       const response = await fetch("/api/documents");
-      if (!response.ok) throw new Error("Saved uploads could not be loaded. Check that the Evid server is running and refresh the page.");
+      if (!response.ok) throw new Error("Saved uploads could not be loaded. Check that the CiteCanvas server is running and refresh the page.");
       const data = await response.json();
       if (!Array.isArray(data.documents)) throw new Error("The saved-file list is invalid.");
       // Reconcile instead of appending: another tab may have cleared the

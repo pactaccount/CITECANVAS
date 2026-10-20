@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 -I
-"""Local Evid UI and PDF upload API with persistent, source-scoped records."""
+"""Local CiteCanvas UI and PDF upload API with persistent, source-scoped records."""
 
 import hashlib
 import http.server
@@ -316,7 +316,7 @@ class EvidHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         path = urlsplit(self.path).path
         if path == "/api/status":
-            self.send_json(200, {"status": "Ready", "service": "Evid", "version": "1.1.0",
+            self.send_json(200, {"status": "Ready", "service": "CiteCanvas", "version": "1.1.0",
                                  "supportedFormats": [".pdf"], "maxFileSizeMb": 25})
         elif path == "/api/health":
             self.send_json(200, runtime(self.workspace_id()).health())
@@ -414,7 +414,7 @@ class EvidHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 def run_server(port=PORT):
     with http.server.ThreadingHTTPServer(("0.0.0.0", port), EvidHTTPRequestHandler) as server:
-        print(f"Evid UI and upload API: http://localhost:{port}", flush=True)
+        print(f"CiteCanvas UI and upload API: http://localhost:{port}", flush=True)
         server.serve_forever()
 
 

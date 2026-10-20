@@ -108,7 +108,7 @@ class UploaderController {
       return { valid: false, error: "File is empty (0 bytes). Empty files cannot be ingested." };
     }
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      return { valid: false, error: `Unsupported format '${file.name}'. Evid accepts PDF files (.pdf) only.` };
+      return { valid: false, error: `Unsupported format '${file.name}'. CiteCanvas accepts PDF files (.pdf) only.` };
     }
     const maxBytes = 25 * 1024 * 1024; // 25 MB
     if (file.size > maxBytes) {
@@ -166,7 +166,7 @@ class UploaderController {
       this.onIngestionSuccess(row, file, await response.json());
     } catch (error) {
       if (error.name !== "AbortError") {
-        this.updateRowState(row, "error", "Could not confirm this upload. Check the Evid server and refresh the library before retrying. " + error.message);
+        this.updateRowState(row, "error", "Could not confirm this upload. Check the CiteCanvas server and refresh the library before retrying. " + error.message);
       }
     } finally {
       this.activeUploads.delete(uploadId);

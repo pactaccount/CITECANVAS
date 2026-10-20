@@ -204,7 +204,7 @@ class AskController {
           outcomeLabel: "Lot Not Found (Abstained)",
           answerText: `I could not establish an answer for lot ${queriedLot}. Lot number ${queriedLot} was not found in any of the verified certificates or logs in this document bundle. Verified lots in this bundle are Lot 18356721 (Low Flow Kit, Page 2) and Lot 15102934 (High Flow Kit, Page 3).`,
           citations: [],
-          qualifications: "Evid abstains from guessing lot associations across unverified identifiers.",
+          qualifications: "CiteCanvas abstains from guessing lot associations across unverified identifiers.",
           calculation: null
         };
         this.addAnswerCard(query, abstention, sourceScope);

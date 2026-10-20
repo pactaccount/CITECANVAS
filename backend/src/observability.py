@@ -24,7 +24,7 @@ def configure_observability():
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
     resource = Resource.create({
-        SERVICE_NAME: os.getenv("OTEL_SERVICE_NAME", "evid"),
+        SERVICE_NAME: os.getenv("OTEL_SERVICE_NAME", "citecanvas"),
         SERVICE_VERSION: os.getenv("EVID_RELEASE", "unversioned"),
         "deployment.environment": os.getenv("EVID_ENVIRONMENT", "local"),
     })

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">CiteCanvas</title>
+  <desc id="desc">A layered document canvas with a citation mark</desc>
+  <defs>
+    <linearGradient id="canvas" x1="8" y1="6" x2="57" y2="59" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2867a7"/>
+      <stop offset="1" stop-color="#7149a7"/>
+    </linearGradient>
+  </defs>
+  <path d="M16 9h25l11 11v30a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6V15a6 6 0 0 1 6-6Z" fill="url(#canvas)"/>
+  <path d="M41 9v9a3 3 0 0 0 3 3h8" fill="none" stroke="#dcecff" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M22 29.5c0-3.6 2.1-6 5.9-6v3.7c-1.6.2-2.4 1.1-2.4 2.8h2.4v8.5H22v-8.5Zm12.5 0c0-3.6 2.1-6 5.9-6v3.7c-1.6.2-2.4 1.1-2.4 2.8h2.4v8.5h-5.9v-8.5Z" fill="#fff"/>
+  <path d="M21 45h22" stroke="#dcecff" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+</svg>

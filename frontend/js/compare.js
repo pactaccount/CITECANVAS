@@ -132,7 +132,7 @@ class CompareController {
       emptyDesc.style.maxWidth = "520px";
       emptyDesc.style.margin = "0 auto";
       emptyDesc.textContent =
-        "Evid displays only verified evidence-linked differences. Supported sample combinations are: Packaging Spec Rev B vs Rev C, or Low Flow Kit vs High Flow Kit.";
+        "CiteCanvas displays only verified evidence-linked differences. Supported sample combinations are: Packaging Spec Rev B vs Rev C, or Low Flow Kit vs High Flow Kit.";
 
       emptyCell.appendChild(emptyTitle);
       emptyCell.appendChild(emptyDesc);

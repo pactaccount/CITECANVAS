@@ -7,7 +7,7 @@
     // The upload API and source images require the local HTTP server.
     if (location.protocol === "file:") location.replace("http://localhost:8000/");
   </script>
-  <title>Evid — Document workspace</title>
+  <title>CiteCanvas — Document workspace</title>
   <meta name="description" content="Your browser-scoped PDF document workspace.">
 
   <!-- Stylesheets -->
@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="css/modal.css">
   <link rel="stylesheet" href="css/onboarding.css">
   <link rel="stylesheet" href="css/workflows.css">
+  <link rel="icon" href="assets/citecanvas-mark.svg" type="image/svg+xml">
 </head>
 <body>
   <div class="app-root">
@@ -35,8 +36,8 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
         <div class="brand-badge">
-          <div class="brand-logo-icon" aria-hidden="true">E</div>
-          <span>Evid</span>
+          <div class="brand-logo-icon" aria-hidden="true"><img src="assets/citecanvas-mark.svg" alt=""></div>
+          <span>CiteCanvas</span>
           <span class="version-tag">Workspace</span>
         </div>
 
@@ -522,7 +523,7 @@
         </div>
         <div class="modal-body">
           <p style="font-size: 13px; color: var(--color-text-secondary);">
-            Evid routes unit conversions and arithmetic to deterministic calculations without LLM rounding hallucinations.
+            CiteCanvas routes unit conversions and arithmetic to deterministic calculations without LLM rounding hallucinations.
           </p>
 
           <div class="calc-breakdown-card">
@@ -667,11 +668,11 @@
     <div class="modal-overlay" id="helpModalOverlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
       <div class="modal-dialog">
         <div class="modal-header">
-          <h2 class="modal-title" id="helpModalTitle">Evid Workspace Help</h2>
+          <h2 class="modal-title" id="helpModalTitle">CiteCanvas Workspace Help</h2>
           <button class="btn btn-subtle btn-icon-sm" id="btnCloseHelpModal" aria-label="Close modal">&times;</button>
         </div>
         <div class="modal-body" style="font-size: 13px; line-height: 1.6; color: var(--color-text-secondary);">
-          <p>Evid helps you keep PDF files together and inspect their original pages.</p>
+          <p>CiteCanvas helps you keep PDF files together and inspect their original pages.</p>
           <ol class="help-steps">
             <li><strong>Add a PDF.</strong> Use Add documents in the header.</li>
             <li><strong>Open it.</strong> In Documents, choose Open to see the full file or expand a file to see its sections.</li>
