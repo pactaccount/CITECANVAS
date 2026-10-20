@@ -39,9 +39,13 @@ services:
         sync: false
       - key: QDRANT_API_KEY
         sync: false
+      - key: EVID_QDRANT_COLLECTION
+        value: evid_runtime_pages_v1
       - key: VLM_API_KEY
         sync: false
       - key: VLM_BASE_URL
         value: https://integrate.api.nvidia.com/v1
       - key: VLM_MODEL_NAME
         value: meta/llama-3.2-11b-vision-instruct
+      - key: EVID_EMBEDDING_MODEL
+        value: nvidia/llama-nemotron-embed-vl-1b-v2

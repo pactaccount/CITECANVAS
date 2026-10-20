@@ -1,8 +1,0 @@
-{
-  "id": "case-008",
-  "category": "malicious",
-  "seed_used": 42,
-  "generated_at": "2026-10-13T00:00:00Z",
-  "expected_outcome": "see category spec",
-  "hash": "6442745e82935aac"
-}
