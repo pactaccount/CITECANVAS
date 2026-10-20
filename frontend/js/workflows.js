@@ -82,7 +82,7 @@ class WorkflowsController {
       const data=await response.json();if(!response.ok)throw Error(data.error||'Analysis failed.');
       this[name].result=data;status.textContent=data.message||data.method||'Complete.';
       if(name==='Ask') {
-        for(const answer of data.answers){const section=document.createElement('section');const p=document.createElement('p');p.textContent=answer.answer;section.append(p,this.citation(answer));results.append(section);}
+        for(const answer of data.answers){const section=document.createElement('section');const p=document.createElement('p');p.textContent=answer.displayAnswer||answer.answer;section.append(p,this.citation(answer));results.append(section);}
         if(data.checkedPages?.length){const p=document.createElement('p');p.textContent='Pages inspected: '+data.checkedPages.map(c=>`${c.filename} p.${c.page}`).join(', ');results.append(p);}
         if(data.warnings?.length){const p=document.createElement('p');p.textContent=data.warnings.join(' ');results.append(p);}
       } else if(name==='Extract') {

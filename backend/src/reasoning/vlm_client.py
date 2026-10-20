@@ -111,7 +111,10 @@ class VLMClient:
                 },
             ],
             "temperature": 0.0,
-            "max_tokens": 1024,
+            # The strict response schema is deliberately small. Limiting the
+            # completion prevents unused generation time without restricting
+            # the cited source image or evidence coordinates.
+            "max_tokens": 384,
             "response_format": {"type": "json_object"},
         }
 
@@ -213,6 +216,7 @@ class VLMClient:
             query=query,
             status=status,
             answer=parsed.get("answer"),
+            display_answer=parsed.get("display_answer"),
             numeric_value=num_val,
             unit=parsed.get("unit"),
             citation=citation,

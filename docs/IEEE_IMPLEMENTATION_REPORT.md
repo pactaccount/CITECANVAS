@@ -111,6 +111,26 @@ standard Python exporter supports OTLP HTTP/protobuf configuration [5], allowing
 the deployment to use a self-hosted or managed collector without changing the
 application.
 
+### E. Performance-Preserving Ingestion and Retrieval
+
+The release separates readiness from evidence fidelity. The immutable original
+PDF remains in R2. During upload, CiteCanvas creates a fast, lossless 180-DPI
+page preview and transfers page objects with a bounded four-request R2 pool.
+When the source viewer, citation crop, or visual model needs a page, the server
+creates and caches a lossless 300-DPI evidence render from the original PDF.
+Thus, upload latency is reduced without replacing the underlying source or
+reducing visual-verification resolution.
+
+Answering uses a cascade. Native text and BM25 select one economical first
+candidate; it is still checked by the vision model against a 300-DPI evidence
+page. If verification is inconclusive, CiteCanvas falls through to the existing
+visual semantic retrieval and evaluates the remaining candidates. Qdrant is
+queried before a document's page vectors are regenerated or uploaded, preventing
+the former repeated upsert on later questions. This preserves visual retrieval
+for scans, tables, charts, and diagrams while avoiding it when a direct
+text-backed answer is already available. The design follows the retrieval-stage
+separation used in visual document research [6], [7].
+
 ## IV. Implementation
 
 The frontend is a lightweight browser application with guided actions for
@@ -145,6 +165,7 @@ grounded answer, not a general accuracy claim.
 | Docker release check | Build sanitized image; verify no `.env`; run migrations and focused tests | Passed |
 | Controlled grounded question | One BMW query through the configured model service | Passed; forged wheels identified with page evidence |
 | Browser isolation check | Same-profile tab versus private-profile session | Expected shared versus empty workspace behavior observed |
+| Preview-render benchmark | 12-page fixture, local CPU only | 300-DPI optimized PNG: 0.874 s; 180-DPI fast PNG: 0.073 s |
 
 The present evaluation does not establish retrieval recall, answer accuracy, or
 latency percentiles across a representative corpus. A follow-on study should use
@@ -153,6 +174,15 @@ Recall@k, citation precision, grounded-answer accuracy, abstention precision,
 and p50/p95 upload, retrieval, and answer latency. Evaluations should keep model
 version, prompt revision, corpus hash, and environment configuration with each
 result to make releases reproducible.
+
+For a hosted release, Render logs now write safe timing records named
+`citecanvas.upload` and `citecanvas.ask`. They include only page/source counts
+and stage durations: preview rendering, native-text extraction, durable save,
+fast retrieval, semantic retrieval, visual verification, and total elapsed
+time. They intentionally exclude document text, filenames, questions, answers,
+workspace IDs, and credentials. Compare one upload and one cited question before
+and after deployment to obtain the production result for the selected Render
+instance.
 
 ## VI. Issues Encountered and Resolutions
 
@@ -210,3 +240,11 @@ Available: https://render.com/docs/blueprint-spec
 
 [5] OpenTelemetry, “Exporters,” *OpenTelemetry Python Documentation*.
 Available: https://opentelemetry.io/docs/languages/python/exporters/
+
+[6] M. Faysse *et al*., “ColPali: Efficient Document Retrieval with Vision
+Language Models,” *arXiv:2407.01449*, 2024. Available:
+https://arxiv.org/abs/2407.01449
+
+[7] “Cascaded Retrieval with Cross-Modal Query Refinement for Efficient Visual
+Document Search,” *arXiv:2610.20367*, 2026. Available:
+https://arxiv.org/abs/2610.20367

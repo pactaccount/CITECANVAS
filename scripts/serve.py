@@ -9,12 +9,13 @@ import re
 import shutil
 import sys
 import threading
+import time
 import uuid
 from http.cookies import SimpleCookie
 from email import policy
 from email.parser import BytesParser
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -171,6 +172,7 @@ def ingest_uploaded_pdf(file_bytes, filename, workspace_id=None):
     doc_id = hashlib.sha256(file_bytes).hexdigest()
     store = persistent_store() if workspace_id is not None else None
     storage_dir = STORAGE_DIR if workspace_id is None else workspace_storage_dir(workspace_id)
+    started = time.perf_counter()
     with INGESTION_LOCK:
         record_path = storage_dir / doc_id / "document.json"
         if record_path.exists():
@@ -184,7 +186,9 @@ def ingest_uploaded_pdf(file_bytes, filename, workspace_id=None):
             return {**record, "duplicate": True}
 
         service = DocumentIngestionService(storage_dir=storage_dir)
+        render_started = time.perf_counter()
         case = service.ingest_pdf(file_bytes, filename=filename)
+        render_ms = round((time.perf_counter() - render_started) * 1000)
         if case.total_pages < 1:
             raise ValueError("PDF contains no pages.")
         source_dir = storage_dir / doc_id
@@ -198,10 +202,12 @@ def ingest_uploaded_pdf(file_bytes, filename, workspace_id=None):
 
         # Save the original so metadata and native text can be recovered later.
         (source_dir / "source.pdf").write_bytes(file_bytes)
+        text_started = time.perf_counter()
         try:
             page_text = TextExtractionService.extract_from_pdf(file_bytes)
         except Exception:
             page_text = {}
+        text_ms = round((time.perf_counter() - text_started) * 1000)
         record = {
             "status": "Ready", "docId": doc_id,
             "filename": case.filename,
@@ -219,9 +225,38 @@ def ingest_uploaded_pdf(file_bytes, filename, workspace_id=None):
         temp = record_path.with_suffix(".tmp")
         temp.write_text(json.dumps(record, ensure_ascii=False))
         temp.replace(record_path)
+        persist_started = time.perf_counter()
         if store:
-            return store.save_document(workspace_id, record, source_dir)
-        return record
+            record = store.save_document(workspace_id, record, source_dir)
+        persist_ms = round((time.perf_counter() - persist_started) * 1000)
+        timings = {
+            "renderMs": render_ms,
+            "textExtractMs": text_ms,
+            "durableSaveMs": persist_ms,
+            "totalMs": round((time.perf_counter() - started) * 1000),
+        }
+        print(json.dumps({"event": "citecanvas.upload", "pages": case.total_pages, "timingsMs": timings}), flush=True)
+        return {**record, "processing": timings}
+
+
+def evidence_page(workspace_id, doc_id, page_number):
+    """Return a cached 300-DPI page without making upload wait for it."""
+    from backend.src.ingestion.pdf_renderer import DocumentIngestionService
+
+    document_dir = workspace_storage_dir(workspace_id) / doc_id
+    high_resolution = document_dir / f"page_{page_number}_evidence.png"
+    if high_resolution.is_file():
+        return high_resolution
+    with INGESTION_LOCK:
+        if high_resolution.is_file():
+            return high_resolution
+        source = document_dir / "source.pdf"
+        if not source.is_file():
+            store = persistent_store()
+            if not store:
+                raise FileNotFoundError("Original PDF is unavailable.")
+            store.hydrate_source(workspace_id, doc_id, document_dir)
+        return DocumentIngestionService.render_evidence_page(source, page_number, high_resolution)
 
 
 class EvidHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -281,9 +316,10 @@ class EvidHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
 
-    def send_workspace_page(self, workspace_id, doc_id, page_number):
+    def send_workspace_page(self, workspace_id, doc_id, page_number, *, high_resolution=False):
         """Serve rendered evidence only after scoping it to the request cookie."""
-        page_path = workspace_storage_dir(workspace_id) / doc_id / f"page_{page_number}.png"
+        page_path = (evidence_page(workspace_id, doc_id, page_number) if high_resolution
+                     else workspace_storage_dir(workspace_id) / doc_id / f"page_{page_number}.png")
         if page_path.is_file():
             data = page_path.read_bytes()
         else:
@@ -314,7 +350,8 @@ class EvidHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         return True
 
     def do_GET(self):
-        path = urlsplit(self.path).path
+        parsed_url = urlsplit(self.path)
+        path = parsed_url.path
         if path == "/api/status":
             self.send_json(200, {"status": "Ready", "service": "CiteCanvas", "version": "1.1.0",
                                  "supportedFormats": [".pdf"], "maxFileSizeMb": 25})
@@ -325,7 +362,8 @@ class EvidHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == "/api/documents":
             self.send_json(200, {"documents": saved_documents(self.workspace_id())})
         elif match := re.fullmatch(r"/api/documents/([a-f0-9]{64})/pages/page_(\d+)\.png", path):
-            self.send_workspace_page(self.workspace_id(), match.group(1), int(match.group(2)))
+            quality = parse_qs(parsed_url.query).get("quality", [""])[0]
+            self.send_workspace_page(self.workspace_id(), match.group(1), int(match.group(2)), high_resolution=quality == "high")
         else:
             super().do_GET()
 

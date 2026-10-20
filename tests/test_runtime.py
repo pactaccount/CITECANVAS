@@ -34,6 +34,14 @@ def test_unknown_lot_never_retrieves_another_lot(tmp_path,monkeypatch):
     assert candidates==[]
 
 
+def test_text_first_retrieval_does_not_require_visual_embeddings(tmp_path, monkeypatch):
+    runtime = Runtime(tmp_path, lambda: [record('a', 'The tested temperature is 25 C.')])
+    monkeypatch.setattr(runtime, 'semantic', lambda *_: pytest.fail('visual retrieval must stay deferred'))
+    candidates, warnings = runtime.retrieve(runtime.sources(['a' * 64]), 'What is the tested temperature?', include_semantic=False)
+    assert candidates[0][2] == 1
+    assert warnings == []
+
+
 def test_missing_model_key_and_empty_input_have_no_sample_fallback(tmp_path,monkeypatch):
     monkeypatch.delenv('VLM_API_KEY',raising=False)
     runtime=Runtime(tmp_path,lambda:[record('a','text')])

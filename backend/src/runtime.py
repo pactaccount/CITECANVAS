@@ -37,6 +37,7 @@ class Runtime:
         self.model_lock = threading.BoundedSemaphore(2)
         self.index_lock = threading.Lock()
         self.embedding_model = os.getenv('EVID_EMBEDDING_MODEL', 'nvidia/llama-nemotron-embed-vl-1b-v2')
+        self.qdrant_indexes_ready = set()
         self.last = {}
 
     def health(self):
@@ -84,6 +85,25 @@ class Runtime:
             raise ValueError('A selected file is no longer available. Refresh Documents.')
         return [records[i] for i in dict.fromkeys(ids)]
 
+    def evidence_page(self, source, page):
+        """Create a lossless page only for final visual verification.
+
+        Uploads persist compact previews. The original PDF is retained, and
+        this cached 300-DPI render is used for model evidence and crops so a
+        faster upload never reduces answer-verification fidelity.
+        """
+        from backend.src.ingestion.pdf_renderer import DocumentIngestionService
+
+        document_dir = self.storage / source['docId']
+        target = document_dir / f'page_{page}_evidence.png'
+        if target.is_file():
+            return target
+        source_pdf = document_dir / 'source.pdf'
+        if not source_pdf.is_file():
+            raise FileNotFoundError('Original PDF is not available for visual verification.')
+        with self.native_lock:
+            return DocumentIngestionService.render_evidence_page(source_pdf, page, target)
+
     def embeddings(self, inputs, kind='passage', modality='image'):
         if not os.getenv('VLM_API_KEY'):
             raise RuntimeError('The server needs VLM_API_KEY to use NVIDIA analysis.')
@@ -101,11 +121,64 @@ class Runtime:
         self.last['embeddings'] = {'status': 'connected', 'checkedAt': time.time()}
         return [v['embedding'] for v in vectors]
 
+    def _qdrant_pages(self, source, query_vector):
+        """Return existing document vectors without re-uploading them."""
+        if not os.getenv('QDRANT_URL'):
+            return []
+        from qdrant_client import QdrantClient, models
+
+        collection = os.getenv('EVID_QDRANT_COLLECTION', 'evid_runtime_pages_v1')
+        namespace = hashlib.sha256(str(self.storage.resolve()).encode()).hexdigest()
+        client = QdrantClient(url=os.environ['QDRANT_URL'], api_key=os.getenv('QDRANT_API_KEY'), timeout=20)
+        try:
+            if not client.collection_exists(collection):
+                return []
+            found = client.query_points(
+                collection_name=collection,
+                query=query_vector,
+                query_filter=models.Filter(must=[
+                    models.FieldCondition(key='workspace', match=models.MatchValue(value=namespace)),
+                    models.FieldCondition(key='doc_id', match=models.MatchValue(value=source['docId'])),
+                ]),
+                limit=4,
+            ).points
+            return [int(point.payload['page']) for point in found]
+        finally:
+            client.close()
+
+    def _ensure_qdrant_indexes(self, client, collection):
+        """Create tenant filters once per runtime rather than per question."""
+        if collection in self.qdrant_indexes_ready:
+            return
+        from qdrant_client import models
+        indexed_fields = client.get_collection(collection).payload_schema or {}
+        for field_name in ('workspace', 'doc_id'):
+            if field_name not in indexed_fields:
+                client.create_payload_index(
+                    collection,
+                    field_name=field_name,
+                    field_schema=models.PayloadSchemaType.KEYWORD,
+                    wait=True,
+                )
+        self.qdrant_indexes_ready.add(collection)
+
     def semantic(self, source, query):
         cache_dir = self.storage.parent / 'rag_vectors'
         cache_dir.mkdir(parents=True, exist_ok=True)
         key = hashlib.sha256((source['docId'] + self.embedding_model).encode()).hexdigest()
         cache = cache_dir / (key + '.json')
+        query_vector = self.embeddings([query], 'query', 'text')[0]
+        # A prior question may already have persisted the document vectors in
+        # Qdrant. Query them first; the old path re-upserted every page for
+        # each request, which added avoidable network latency.
+        if os.getenv('QDRANT_URL'):
+            try:
+                found = self._qdrant_pages(source, query_vector)
+                if found:
+                    self.last['qdrant'] = {'status': 'reused', 'checkedAt': time.time()}
+                    return found
+            except Exception as error:
+                self.last['qdrant'] = {'status': 'local_fallback', 'checkedAt': time.time(), 'error': type(error).__name__}
         with self.index_lock:
             if cache.exists():
                 vectors = json.loads(cache.read_text())
@@ -115,12 +188,14 @@ class Runtime:
                     raise RuntimeError('Semantic indexing is limited to 120 pages per file; using keyword retrieval.')
                 vectors = []
                 for start in range(1, source['totalPages'] + 1, 2):
-                    images = ['data:image/jpeg;base64,' + VLMClient.encode_image_base64(self.storage / source['docId'] / f'page_{p}.png', max_dim=768)
+                    # Visual fallback retains the historic high-resolution
+                    # evidence source. Preview images accelerate upload only;
+                    # they are never substituted for visual semantic evidence.
+                    images = ['data:image/jpeg;base64,' + VLMClient.encode_image_base64(self.evidence_page(source, p), max_dim=768)
                               for p in range(start, min(source['totalPages'] + 1, start + 2))]
                     vectors.extend(self.embeddings(images))
                 temp = cache.with_suffix('.tmp')
                 temp.write_text(json.dumps(vectors)); temp.replace(cache)
-        query_vector = self.embeddings([query], 'query', 'text')[0]
         if os.getenv('QDRANT_URL'):
             try:
                 from qdrant_client import QdrantClient, models
@@ -130,19 +205,7 @@ class Runtime:
                 client = QdrantClient(url=os.environ['QDRANT_URL'], api_key=os.getenv('QDRANT_API_KEY'), timeout=20)
                 if not client.collection_exists(collection):
                     client.create_collection(collection, vectors_config=models.VectorParams(size=len(query_vector), distance=models.Distance.COSINE))
-                # Qdrant Cloud requires payload indexes before filtered searches.
-                # These two fields are the tenant boundary and source boundary
-                # for every runtime vector query. Avoid an index-management
-                # request on each question once the collection is prepared.
-                indexed_fields = (client.get_collection(collection).payload_schema or {})
-                for field_name in ('workspace', 'doc_id'):
-                    if field_name not in indexed_fields:
-                        client.create_payload_index(
-                            collection,
-                            field_name=field_name,
-                            field_schema=models.PayloadSchemaType.KEYWORD,
-                            wait=True,
-                        )
+                self._ensure_qdrant_indexes(client, collection)
                 client.upsert(collection, points=[models.PointStruct(id=str(uuid.uuid5(uuid.NAMESPACE_URL, namespace+key+str(p))), vector=v,
                     payload={'workspace': namespace, 'doc_id': source['docId'], 'page': p}) for p, v in enumerate(vectors, 1)], wait=True)
                 found = client.query_points(collection, query=query_vector, query_filter=models.Filter(must=[
@@ -162,7 +225,7 @@ class Runtime:
         scores = [float(np.dot(q,v)/(max(np.linalg.norm(q)*np.linalg.norm(v),1e-10))) for v in vectors]
         return sorted(range(1,len(vectors)+1), key=lambda p:scores[p-1], reverse=True)[:4]
 
-    def retrieve(self, sources, query):
+    def retrieve(self, sources, query, *, include_semantic=True):
         candidates = []; warnings = []
         for source in sources:
             texts = {int(k): v for k,v in source.get('pageText', {}).items() if v.strip()}
@@ -172,11 +235,12 @@ class Runtime:
             lexical = BM25Retriever(texts).retrieve(query, top_k=4) if texts else []
             ranks = {}
             for item in lexical:ranks[item['page_number']] = 2/(60+item['rank'])
-            try:
-                for rank, page in enumerate(self.semantic(source, query),1):ranks[page] = ranks.get(page,0)+1/(60+rank)
-            except Exception as error:
-                warnings.append(str(error) if isinstance(error, RuntimeError) else 'Semantic retrieval unavailable; keyword retrieval used.')
-            if not ranks:
+            if include_semantic:
+                try:
+                    for rank, page in enumerate(self.semantic(source, query),1):ranks[page] = ranks.get(page,0)+1/(60+rank)
+                except Exception as error:
+                    warnings.append(str(error) if isinstance(error, RuntimeError) else 'Semantic retrieval unavailable; keyword retrieval used.')
+            if not ranks and include_semantic:
                 ranks = {p:0 for p in range(1,min(source['totalPages'],2)+1)}
             for page,score in sorted(ranks.items(), key=lambda x:x[1], reverse=True)[:2]:
                 candidates.append((score, source, page))
@@ -187,36 +251,62 @@ class Runtime:
             raise ValueError('Enter a question of up to 2,000 characters.')
         sources = self.sources(ids)
         if not os.getenv('VLM_API_KEY'):raise RuntimeError('NVIDIA analysis is not configured on this server.')
-        candidates, warnings = self.retrieve(sources, query)
+        started = time.perf_counter()
+        # A text-backed page is cheap to locate and still receives the same
+        # high-resolution visual verification. Only if that direct route
+        # cannot establish an answer do we invoke visual semantic retrieval.
+        candidates, warnings = self.retrieve(sources, query, include_semantic=False)
+        fast_retrieval_ms = round((time.perf_counter() - started) * 1000)
         checked = []; answers = []
         client = VLMClient(grounding_engine=GroundingEngine(self.storage.parent/'crops'), timeout_seconds=45)
-        for _,source,page in candidates:
-            pdf = self.storage/source['docId']/'source.pdf'
-            with self.model_lock:
-                # No native PDF calls here: model-supplied boxes are reviewed against the source in the UI.
-                answer = client.answer_page_query(query,self.storage/source['docId']/f'page_{page}.png',source['docId'],page)
-            if answer.status.value == 'direct' and answer.citation is None and pdf.exists():
-                with self.native_lock:
-                    phrase = (f"{answer.numeric_value:g} {answer.unit}" if answer.numeric_value is not None and answer.unit else answer.answer or '')
-                    box = client.grounding_engine.locate_text_span(pdf, page, phrase)
-                    if box:
-                        answer.citation = client.grounding_engine.crop_evidence(self.storage/source['docId']/f'page_{page}.png',box,source['docId'],page)
-            answer = AbstentionGuard.verify_answer(answer)
-            self.last['model'] = {'status': 'connected', 'checkedAt': time.time()}
-            checked.append({'fileId':source['docId'],'filename':source['filename'],'page':page})
-            if answer.status.value == 'direct':
-                # A value without page evidence is not displayable as a verified
-                # result. Treat it as unverified instead of crashing extraction.
-                if answer.citation is None:
-                    warnings.append(f"{source['filename']} p.{page}: the model response had no usable source location.")
+        verification_ms = 0
+
+        def inspect(candidates):
+            nonlocal verification_ms
+            for _,source,page in candidates:
+                if (source['docId'], page) in {(item['fileId'], item['page']) for item in checked}:
                     continue
-                answers.append({'answer':answer.answer,'fileId':source['docId'],'filename':source['filename'],
-                    'page':page,'box':answer.citation.box_2d.model_dump(), 'status':'model_grounded'})
-                # Keep latency bounded; report the exact inspected pages, never claim an exhaustive review.
-                break
-        return {'answers':answers,'checkedPages':checked,'warnings':warnings,
+                visual_page = self.evidence_page(source, page)
+                pdf = self.storage/source['docId']/'source.pdf'
+                page_started = time.perf_counter()
+                with self.model_lock:
+                    answer = client.answer_page_query(query, visual_page, source['docId'], page)
+                verification_ms += round((time.perf_counter() - page_started) * 1000)
+                if answer.status.value == 'direct' and answer.citation is None and pdf.exists():
+                    with self.native_lock:
+                        phrase = (f"{answer.numeric_value:g} {answer.unit}" if answer.numeric_value is not None and answer.unit else answer.answer or '')
+                        box = client.grounding_engine.locate_text_span(pdf, page, phrase)
+                        if box:
+                            answer.citation = client.grounding_engine.crop_evidence(visual_page,box,source['docId'],page)
+                answer = AbstentionGuard.verify_answer(answer)
+                self.last['model'] = {'status': 'connected', 'checkedAt': time.time()}
+                checked.append({'fileId':source['docId'],'filename':source['filename'],'page':page})
+                if answer.status.value == 'direct':
+                    if answer.citation is None:
+                        warnings.append(f"{source['filename']} p.{page}: the model response had no usable source location.")
+                        continue
+                    answers.append({'answer':answer.answer, 'displayAnswer':answer.display_answer or answer.answer,
+                        'fileId':source['docId'],'filename':source['filename'], 'page':page,
+                        'box':answer.citation.box_2d.model_dump(), 'status':'model_grounded'})
+                    return True
+            return False
+
+        # One lexical candidate is enough for a fast direct path. A negative
+        # verification deliberately falls through to the full visual method.
+        found = inspect(candidates[:1])
+        semantic_retrieval_ms = 0
+        if not found:
+            semantic_started = time.perf_counter()
+            semantic_candidates, semantic_warnings = self.retrieve(sources, query, include_semantic=True)
+            semantic_retrieval_ms = round((time.perf_counter() - semantic_started) * 1000)
+            warnings.extend(semantic_warnings)
+            inspect(semantic_candidates)
+        timings = {'fastRetrievalMs': fast_retrieval_ms, 'semanticRetrievalMs': semantic_retrieval_ms, 'verificationMs': verification_ms,
+                   'totalMs': round((time.perf_counter() - started) * 1000)}
+        print(json.dumps({'event': 'citecanvas.ask', 'sourceCount': len(sources), 'checkedPages': len(checked), 'timingsMs': timings}), flush=True)
+        return {'answers':answers,'checkedPages':checked,'warnings':list(dict.fromkeys(warnings)),
                 'message': 'Model answer — open the source to check it.' if answers else 'I could not establish an answer from the retrieved pages. Try a more specific question or another source.',
-                'model':client.model_name}
+                'model':client.model_name, 'timings': timings}
 
     def extract(self, ids, fields):
         if not isinstance(fields,list) or not 1 <= len(fields) <= 4 or any(not isinstance(f,str) or not f.strip() or len(f)>120 for f in fields):

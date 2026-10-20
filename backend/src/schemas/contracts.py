@@ -319,6 +319,7 @@ class GroundedAnswer(BaseModel):
     query: str = Field(description="The original user query")
     status: CitationStatus = Field(description="direct, abstain, unsupported, or contradictory")
     answer: Optional[str] = Field(default=None, description="Natural language answer text")
+    display_answer: Optional[str] = Field(default=None, description="One concise, source-grounded sentence for the user")
     numeric_value: Optional[float] = Field(default=None, description="Extracted numerical metric value")
     range_value: Optional[Tuple[float, float]] = Field(default=None, description="Extracted numerical range (lower, upper)")
     financial_amount: Optional[Dict[str, Any]] = Field(default=None, description="Extracted financial amount with currency and scale")
@@ -345,7 +346,7 @@ class GroundedAnswer(BaseModel):
 class PageMetadata(BaseModel):
     """Metadata describing a rendered document page."""
     page_number: int = Field(ge=1)
-    image_path: str = Field(description="Relative path to 300 DPI rendered PNG")
+    image_path: str = Field(description="Relative path to a lossless browsing preview")
     retrieval_image_path: Optional[str] = Field(default=None, description="Path to retrieval-scale image (e.g., 1400px)")
     width: int = Field(description="Image width in pixels")
     height: int = Field(description="Image height in pixels")

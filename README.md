@@ -24,6 +24,8 @@ tables, and presents AI answers with page-linked evidence.
 
 - Browser workspaces require no sign-in and stay separate by browser profile.
 - Each answer must link to usable source evidence or CiteCanvas abstains.
+- Uploads create fast lossless page previews while the original PDF remains
+  intact; source viewing and AI verification render 300-DPI evidence on demand.
 - A restarted host hydrates its short-lived runtime cache from R2 and Neon.
 - Production workspaces expire after a configurable inactive period; the
   default is 24 hours.

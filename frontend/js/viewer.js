@@ -254,7 +254,10 @@ class EvidenceViewerController {
     }
 
     // Set page image source
-    const imgUrl = `${this.currentDocument.pageImageBase}/page_${pageNum}.png`;
+    // Uploads store compact previews for fast readiness. The full evidence
+    // viewer requests a cached 300-DPI page so zooming and citation review
+    // retain the previous visual fidelity.
+    const imgUrl = `${this.currentDocument.pageImageBase}/page_${pageNum}.png?quality=high`;
     this.stage.hidden = true;
     if (this.pageStatus) {
       this.pageStatus.hidden = false;

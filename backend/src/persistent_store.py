@@ -10,6 +10,7 @@ import json
 import os
 import shutil
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -121,10 +122,30 @@ class PersistentWorkspaceStore:
         try:
             self._put_file(original_key, source_dir / "source.pdf", "application/pdf")
             uploaded_keys.append(original_key)
-            for page in range(1, int(record["totalPages"]) + 1):
-                key = self.config.page_key(workspace_id, record["docId"], page)
-                self._put_file(key, source_dir / f"page_{page}.png", "image/png")
-                uploaded_keys.append(key)
+            pages = range(1, int(record["totalPages"]) + 1)
+            # R2 calls are independent. A small bounded pool removes the
+            # serial round-trip bottleneck without overloading a free host or
+            # changing the all-or-nothing persistence guarantee.
+            with ThreadPoolExecutor(max_workers=min(4, int(record["totalPages"]))) as executor:
+                futures = {
+                    executor.submit(
+                        self._put_file,
+                        self.config.page_key(workspace_id, record["docId"], page),
+                        source_dir / f"page_{page}.png",
+                        "image/png",
+                    ): (page, self.config.page_key(workspace_id, record["docId"], page))
+                    for page in pages
+                }
+                failure = None
+                for future in as_completed(futures):
+                    _, key = futures[future]
+                    try:
+                        future.result()
+                        uploaded_keys.append(key)
+                    except Exception as error:
+                        failure = failure or error
+                if failure:
+                    raise failure
             metadata = json.dumps(record, ensure_ascii=False)
             with self.connect() as conn, conn.cursor() as cur:
                 cur.execute(
@@ -170,6 +191,15 @@ class PersistentWorkspaceStore:
             self._download(self.config.page_key(workspace_id, record["docId"], page), destination / f"page_{page}.png")
         (destination / "document.json").write_text(json.dumps(record, ensure_ascii=False))
         return destination
+
+    def hydrate_source(self, workspace_id, doc_id, destination):
+        """Restore only the immutable source PDF for on-demand evidence work."""
+        destination = Path(destination)
+        destination.mkdir(parents=True, exist_ok=True)
+        source = destination / "source.pdf"
+        if not source.is_file():
+            self._download(self.config.document_key(workspace_id, doc_id), source)
+        return source
 
     def page_bytes(self, workspace_id, doc_id, page):
         return self.s3.get_object(

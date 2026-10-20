@@ -9,6 +9,10 @@ services:
         value: r2_neon
       - key: EVID_WORKSPACE_TTL_HOURS
         value: "24"
+      - key: EVID_PREVIEW_DPI
+        value: "180"
+      - key: EVID_EVIDENCE_DPI
+        value: "300"
       - key: EVID_COOKIE_SECURE
         value: "true"
       - key: OTEL_SERVICE_NAME

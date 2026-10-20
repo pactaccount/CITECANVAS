@@ -1,7 +1,9 @@
 """
-High-Speed Document Ingestion & 300 DPI Rendering Service.
-Converts PDFs and standalone images into normalized, high-resolution 300 DPI page images
-with SHA-256 cryptographic deduplication and caching.
+Document ingestion with fast previews and on-demand evidence renders.
+
+Every upload retains its original PDF. Uploads create compact page previews so
+the browser becomes usable quickly; a lossless 300-DPI page is rendered only
+when visual verification or a high-resolution source view needs it.
 """
 
 import hashlib
@@ -14,13 +16,19 @@ import pypdfium2 as pdfium
 from backend.src.schemas.contracts import DocumentCase, PageMetadata
 
 
-# Standard PDF scale factor: 72 points per inch -> 300 DPI print quality
-SCALE_300_DPI = 300.0 / 72.0  # ≈ 4.1667
+# A preview is sufficient for browsing and source navigation. Evidence work
+# always requests the 300-DPI path below, so this does not lower answer
+# verification quality.
+PREVIEW_DPI = int(os.getenv("EVID_PREVIEW_DPI", "180"))
+EVIDENCE_DPI = int(os.getenv("EVID_EVIDENCE_DPI", "300"))
+# Public compatibility constant: callers that explicitly request the historic
+# high-resolution scale still receive the same 300-DPI value.
+SCALE_300_DPI = EVIDENCE_DPI / 72.0
 
 
 class DocumentIngestionService:
     """
-    Ingests PDF documents or standalone images, renders them to 300 DPI PNGs,
+    Ingests PDF documents or standalone images, renders them to preview PNGs,
     and caches them deterministically by binary hash.
     """
 
@@ -39,7 +47,7 @@ class DocumentIngestionService:
     def ingest_pdf(self, pdf_input: Union[str, Path, bytes], filename: str = "document.pdf") -> DocumentCase:
         """
         Ingest a PDF file or binary stream.
-        Renders each page to a 300 DPI PNG file in storage/pages/{doc_id}/.
+        Renders each page to a compact preview PNG file in storage/pages/{doc_id}/.
         Reuses cached render if doc_id exists.
         """
         if isinstance(pdf_input, (str, Path)):
@@ -75,14 +83,14 @@ class DocumentIngestionService:
             page_num = page_index + 1
             page = pdf[page_index]
 
-            # Render at 300 DPI scale factor
-            # scale=SCALE_300_DPI renders 72pt grid at 300 DPI
-            bitmap = page.render(scale=SCALE_300_DPI)
+            bitmap = page.render(scale=PREVIEW_DPI / 72.0)
             pil_image = bitmap.to_pil()
 
             page_filename = f"page_{page_num}.png"
             page_filepath = doc_dir / page_filename
-            pil_image.save(page_filepath, format="PNG", optimize=True)
+            # PNG optimisation is CPU-heavy and offers little benefit for
+            # rendered pages. Fast, lossless compression keeps uploads quick.
+            pil_image.save(page_filepath, format="PNG", optimize=False, compress_level=2)
 
             width, height = pil_image.size
             pages_metadata.append(
@@ -107,6 +115,24 @@ class DocumentIngestionService:
         # Save manifest for instant sub-millisecond cache hits on repeated uploads
         manifest_path.write_text(case.model_dump_json(indent=2))
         return case
+
+    @staticmethod
+    def render_evidence_page(pdf_input: Union[str, Path, bytes], page_number: int, output_path: Union[str, Path]) -> Path:
+        """Render one lossless 300-DPI page only when evidence work needs it."""
+        if page_number < 1:
+            raise ValueError("page_number must be at least 1")
+        pdf = pdfium.PdfDocument(pdf_input)
+        if page_number > len(pdf):
+            raise ValueError("page_number exceeds document length")
+        path = Path(output_path)
+        if path.is_file():
+            return path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        image = pdf[page_number - 1].render(scale=EVIDENCE_DPI / 72.0).to_pil()
+        temp = path.with_suffix(".tmp")
+        image.save(temp, format="PNG", optimize=False)
+        temp.replace(path)
+        return path
 
     def ingest_image(self, image_input: Union[str, Path, bytes], filename: str = "image.png") -> DocumentCase:
         """

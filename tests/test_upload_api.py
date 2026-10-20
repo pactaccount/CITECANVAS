@@ -45,6 +45,17 @@ def test_upload_identity_images_text_and_restore(storage):
     assert "ALPHA-PAGE-12" in next(r for r in restored if r["docId"] == a["docId"])["pageText"]["12"]
 
 
+def test_evidence_page_is_generated_lazily_at_higher_resolution(storage):
+    record = server.ingest_uploaded_pdf(pdf("upload_beta.pdf"), "evidence.pdf")
+    from backend.src.ingestion.pdf_renderer import DocumentIngestionService
+    source_dir = server.STORAGE_DIR / record["docId"]
+    preview = source_dir / "page_1.png"
+    evidence = DocumentIngestionService.render_evidence_page(source_dir / "source.pdf", 1, source_dir / "page_1_evidence.png")
+    with Image.open(preview) as preview_image, Image.open(evidence) as evidence_image:
+        assert evidence_image.width > preview_image.width
+        assert evidence_image.height > preview_image.height
+
+
 def test_duplicate_content_with_another_name_is_one_source(storage):
     data = pdf("upload_beta.pdf")
     first = server.ingest_uploaded_pdf(data, "original.pdf")
