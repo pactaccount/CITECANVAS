@@ -505,3 +505,20 @@
     display: none !important;
   }
 }
+
+@media (max-width: 480px) {
+  .nav-tab {
+    font-size: 11px;
+    padding: 0 4px;
+    gap: 3px;
+  }
+  .nav-tab svg {
+    width: 14px;
+    height: 14px;
+  }
+  #btnTopAddDocs {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+}
+
