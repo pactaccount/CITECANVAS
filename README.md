@@ -68,6 +68,28 @@ For the formal architecture breakdown, ColPali/DocVQA retrieval protocols, mathe
 - **Durable Hydration Recovery**: Zero data loss across service restarts via Cloudflare R2 and Neon PostgreSQL backing.
 - **Production URL**: [https://citecanvas.onrender.com](https://citecanvas.onrender.com)
 
+## Repository Structure
+
+```text
+CITECANVAS/
+├── backend/                 # Python HTTP server, FastAPI routes, and RAG pipeline
+│   ├── app.py               # Main API application and router registration
+│   ├── ingestion.py         # Multi-tier PDF rendering and OCR extraction
+│   ├── retrieval.py         # Qdrant workspace-scoped vector retrieval
+│   └── storage.py           # Cloudflare R2 object storage and Neon PostgreSQL adapter
+├── frontend/                # Browser application, UI layout, and viewer
+├── fixtures/                # Pinned technical verification documents
+├── deploy/                  # Production migrations, blueprint, and deployment configs
+├── docs/                    # IEEE reports, evaluation benchmarks, and telemetry guides
+│   ├── IEEE_EVALUATION_REPORT.md      # Peer-reviewed evaluation report
+│   ├── IEEE_IMPLEMENTATION_REPORT.md  # System architecture & validation
+│   └── OPEN_TELEMETRY_SETUP.md        # Distributed tracing guide
+├── scripts/                 # Operations, storage smoke tests, and server scripts
+├── tests/                   # Deterministic upload, runtime, and retrieval tests
+├── Dockerfile               # Pinned production container build
+└── render.yaml              # Infrastructure as code configuration
+```
+
 ## Deploy and document
 
 The repository contains a pinned-dependency Dockerfile, Render Blueprint, and
